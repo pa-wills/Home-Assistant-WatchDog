@@ -2,17 +2,11 @@ Transform: AWS::Serverless-2016-10-31
 
 
 Resources:
-  CheckHeartbeatRecencyFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: onCheckHeatbeatRecency/
-      Handler: app.lambda_handler
-      Runtime: python3.9
   HearbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: onHeartbeatFromHomeAssistant/
-      Handler: app.lambda_handler
+      CodeUri: /
+      Handler: onHeartbeatFromHomeAssistant.lambda_handler
       Runtime: python3.9
       Events:
         HelloWorld:
