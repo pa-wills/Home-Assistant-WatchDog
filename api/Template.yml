@@ -1,19 +1,42 @@
 Transform: AWS::Serverless-2016-10-31
 
-
+Description: Your First DynamoDB Table
 Resources:
-  HearbeatFromHomeAssistant:
-    Type: AWS::Serverless::Function
+  MyFirstTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      CodeUri: /
-      Handler: onHeartbeatFromHomeAssistant.lambda_handler
-      Runtime: python3.9
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /heartbeatFromHomeAssistant
-            Method: get
+      TableName: HomeAssistantHeartBeat_2
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: ID
+          KeyType: RANGE
+      AttributeDefinitions:
+        -
+          AttributeName: ID
+          AttributeType: S
+        -
+          AttributeName: AlertMessage
+          AttributeType: S
+        -
+          AttributeName: LastDetected
+          AttributeType: S
+
+
+
+#Resources:
+#  HearbeatFromHomeAssistant:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: /
+#      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+#      Runtime: python3.9
+#      Events:
+#        HelloWorld:
+#          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+#          Properties:
+#            Path: /heartbeatFromHomeAssistant
+#            Method: get
 
 
 
