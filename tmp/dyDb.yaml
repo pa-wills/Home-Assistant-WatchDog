@@ -10,7 +10,28 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: An attempt to specify the Home-Assistant-Watchdog stack. Having a lot of trouble. Work in progress.
 
 Resources:
-  HomeAssistantHeartBeat:
+  HeatbeatDatabaseAllAccessRole:
+    Type:  AWS::IAM::Role
+    Properties:
+      RoleName: HeatbeatDatabaseAllAccess
+      Description: Allows Lambda functions to call AWS services on your behalf.
+      Path: /
+      # Unsure what this does?
+      # https://devops.stackexchange.com/questions/5094/what-is-the-purpose-of-assumerolepolicydocument-in-iam/5099
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: 
+            - lambda.amazonaws.com
+          Action: 
+          - sts:AssumeRole
+      # This next param links the AWS-managed policy to the role.
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+  HomeAssistantHeartBeatDyDB:
     Type: 'AWS::DynamoDB::Table'
     Properties:
       TableName: HomeAssistantHeartBeat
