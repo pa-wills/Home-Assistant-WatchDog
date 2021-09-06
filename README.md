@@ -14,6 +14,10 @@ I have managed to:
 * Would be create to be able to launch this from a command line tool, rather than from the GUI all the time.
 
 
+## Here's a few resources that were helpful
+https://www.youtube.com/watch?v=P7i01eqmzrs
+
+
 https://www.freecodecamp.org/news/how-to-build-a-serverless-application-using-aws-sam/
 Here's the how-to
 
