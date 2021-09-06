@@ -47,6 +47,8 @@ Resources:
     Properties:
       BucketName: codebuild-ap-southeast-2-9165-8911-9438-output
 
+  # TODO: least-priv this.
+  # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
   CodePipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -118,6 +120,54 @@ Resources:
                   - 'sqs:*'
                   - 'ecs:*'
                 Resource: '*'
+
+  ProjectPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: CodePipelineServiceRole
+    Description: The pipeline. Kind of the core of things, really.
+    Properties:
+      Name: Home-Assistant-Watchdog-pipeline
+      RoleArn: !GetAtt
+        - CodePipelineServiceRole
+        - Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: source
+          InputArtifacts: []
+          ActionTypeId:
+            Version: "1"
+            Category: Source
+            Owner: ThirdParty
+            Provider: GitHub
+          OutputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          Configuration:
+            Repo: !Ref GitHubRepoName
+            Branch: !Ref GitHubRepoBranch
+            OAuthToken: !Ref GitHubToken
+            Owner: !Ref GitHubUser
+          RunOrder: 1
+      - Name: Build
+        Actions:
+        - Name: build-from-source
+          InputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          OutputArtifacts:
+          - Name: !Sub "${AppName}-BuildArtifact"
+          Configuration:
+            ProjectName: !Sub "${AppName}-build"
+          RunOrder: 1
+
+
+      ArtifactStore:
+        Type: S3
+        Location: !Ref OutputBucket
 
 
 
