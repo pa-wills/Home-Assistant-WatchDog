@@ -34,18 +34,11 @@ Parameters:
 Resources:
 
 
-  # Two buckets. One for input, one for output.
-  InputBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    Properties:
-      BucketName: codebuild-ap-southeast-2-9165-8911-9438-input
-
   OutputBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: codebuild-ap-southeast-2-9165-8911-9438-output
+      BucketName: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
 
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
@@ -150,7 +143,7 @@ Resources:
           RunOrder: 1
       - Name: Build
         Actions:
-        - Name: build-from-source
+        - Name: build-lambdas
           InputArtifacts:
           - Name: !Sub "${AppName}-SourceArtifact"
           ActionTypeId:
@@ -163,8 +156,6 @@ Resources:
           Configuration:
             ProjectName: !Sub "${AppName}-build"
           RunOrder: 1
-
-
       ArtifactStore:
         Type: S3
         Location: !Ref OutputBucket
