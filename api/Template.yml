@@ -1,27 +1,31 @@
-Transform: AWS::Serverless-2016-10-31
-
-Description: Your First DynamoDB Table
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Blueprint for API Gateway custom authorizers, implemented in Python 2.7.'
+Parameters: 
+  TopicNameParameter: 
+    Type: String
 Resources:
-  MyFirstTable:
-    Type: AWS::DynamoDB::Table
+  apigatewayauthorizerpython:
+    Type: 'AWS::Serverless::Function'
     Properties:
-      TableName: HomeAssistantHeartBeat_2
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        -
-          AttributeName: ID
-          KeyType: RANGE
-      AttributeDefinitions:
-        -
-          AttributeName: ID
-          AttributeType: S
-        -
-          AttributeName: AlertMessage
-          AttributeType: S
-        -
-          AttributeName: LastDetected
-          AttributeType: S
+      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+      Runtime: python2.7
+      CodeUri: /
+      Description: 'Blueprint for API Gateway custom authorizers, implemented in Python 2.7.'
+      MemorySize: 256
+      Timeout: 5
 
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /sam
+            Method: get
+
+
+
+#      Policies:
+#        - SNSPublishMessagePolicy:
+#            TopicName: !Ref TopicNameParameter
 
 
 #Resources:

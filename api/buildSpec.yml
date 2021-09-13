@@ -1,1 +1,15 @@
- 
+version: 0.0
+environment_variables:
+  plaintext:
+    "INPUT_FILE": "Template.yaml"
+    "S3_BUCKET": ""
+containers:
+  LambdaFunctions:
+    phases:
+      during_build:
+        commands:
+          - npm install
+    artifacts:
+      files:
+        - post-saml.yaml
+        - beta.json 
