@@ -154,7 +154,9 @@ Resources:
           OutputArtifacts:
           - Name: !Sub "${AppName}-BuildArtifact"
           Configuration:
-            ProjectName: !Sub "${AppName}-build"
+#            ProjectName: !Sub "${AppName}-build"
+            ProjectName: BuildLambdas
+
           RunOrder: 1
       ArtifactStore:
         Type: S3

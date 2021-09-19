@@ -14,6 +14,10 @@ I have managed to:
 * Would be create to be able to launch this from a command line tool, rather than from the GUI all the time.
 
 
+https://www.youtube.com/watch?v=P7i01eqmzrs
+
+
+
 ## Here's a few resources that were helpful
 https://www.youtube.com/watch?v=P7i01eqmzrs
 
@@ -61,6 +65,8 @@ DynamoDB_Table.template - looks innocuous
 
 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
 
-
+The example I keep returning to
+https://www.youtube.com/watch?v=P7i01eqmzrs&t=1508s
+https://github.com/aws-samples/aws-serverless-samfarm
 
 
