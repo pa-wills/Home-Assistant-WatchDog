@@ -172,7 +172,7 @@ Resources:
 
   ProjectPipeline:
     Type: AWS::CodePipeline::Pipeline
-    DependsOn: CodePipelineServiceRole
+    DependsOn: [CodePipelineServiceRole, CodeBuildProject]
     Description: The pipeline. Kind of the core of things, really.
     Properties:
       Name: Home-Assistant-Watchdog-pipeline
