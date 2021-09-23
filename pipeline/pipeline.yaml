@@ -211,7 +211,7 @@ Resources:
           - Name: !Sub "${AppName}-BuildArtifact"
           Configuration:
 #            ProjectName: !Sub "${AppName}-build"
-            ProjectName: BuildLambdas
+            ProjectName: CodeBuildProject
 
           RunOrder: 1
       ArtifactStore:
