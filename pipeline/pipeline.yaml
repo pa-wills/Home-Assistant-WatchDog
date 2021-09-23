@@ -45,11 +45,13 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
           - Name: S3_BUCKET
-            Value: !Ref S3Bucket
-        Image: !Ref CodeBuildImage
+            Value: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
+        Image: aws/codebuild/python:2.7.12
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-build"
-      ServiceRole: !Ref CodeBuildRole
+      ServiceRole: !GetAtt
+        - CodeBuildTrustRole
+        - Arn
       Source:
         Type: CODEPIPELINE
       Tags:
@@ -62,6 +64,37 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
+
+  CodeBuildTrustRole:
+    Description: Creating service role in IAM for AWS CodeBuild
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-codebuild-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [codebuild.amazonaws.com]
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: CodeBuildRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+                Resource: ["*"]
+              - Effect: Allow
+                Resource: ["*"]
+                Action: ["s3:*"]
+              - Effect: Allow
+                Resource: ["*"]
+                Action: ["kms:GenerateDataKey*", "kms:Encrypt", "kms:Decrypt"]
+              - Effect: Allow
+                Resource: ["*"]
+                Action: ["sns:SendMessage"]
 
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
@@ -79,7 +112,7 @@ Resources:
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: AWS-CodePipeline-Service-Policy
+        - PolicyName: CodePipelineRolePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
