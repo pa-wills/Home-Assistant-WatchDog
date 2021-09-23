@@ -8,7 +8,9 @@ containers:
     phases:
       during_build:
         commands:
-          - npm install
+          - pip install --upgrade pip awscli
+          - aws cloudformation package --s3-bucket $S3_BUCKET --template-file template.yaml --output-template-file output-template.yaml
+
     artifacts:
       files:
         - post-saml.yaml
