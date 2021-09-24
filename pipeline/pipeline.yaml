@@ -46,7 +46,7 @@ Resources:
         EnvironmentVariables:
           - Name: S3_BUCKET
             Value: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-build"
       ServiceRole: !GetAtt

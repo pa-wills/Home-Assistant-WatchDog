@@ -12,13 +12,11 @@ phases:
       python: 3.9
   pre_build:
     commands:
-#      - pip install --upgrade setuptools
-#      - pip install pip -U
       - pip install --upgrade pip
       - pip install --user aws-sam-cli
   build:
     commands:
-      - sam build # gambit
+      - sam build --template-file Template.yml
 #      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file $INPUT_FILE --output-template-file output-template.yaml
 
 
