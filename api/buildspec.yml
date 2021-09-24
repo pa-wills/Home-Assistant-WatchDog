@@ -1,7 +1,7 @@
 version: 0.2 # Turns out this matters - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec-ref-versions
 environment_variables:
   plaintext:
-    "INPUT_FILE": "Template.yml"
+    "INPUT_FILE": "api/Template.yml"
     "S3_BUCKET": "codepipeline-ap-southeast-2-9165-8911-9438-artifactstore"
 
 # Phase definitions: https://aws.amazon.com/blogs/apn/an-introduction-to-aws-codebuild/
@@ -16,8 +16,8 @@ phases:
       - pip install --user aws-sam-cli
   build:
     commands:
-      - sam build --template-file api/Template.yml
-#      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file $INPUT_FILE --output-template-file output-template.yaml
+#      - sam build --template-file api/Template.yml
+      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file $INPUT_FILE --output-template-file output-template.yaml
 
 
 artifacts:
