@@ -8,6 +8,8 @@ phases:
   install:
     runtime-versions:
       python: 3.9
+    commands:
+      pip install --user aws-sam-cli
   build:
     commands:
       - sam build # gambit
