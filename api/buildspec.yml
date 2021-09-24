@@ -17,7 +17,8 @@ phases:
   build:
     commands:
 #      - sam build --template-file api/Template.yml
-      - sam package --template-file ${INPUT_FILE} --s3-bucket ${S3_BUCKET} --output-template-file packaged.yaml
+      - sam build
+      - sam package --template-file $INPUT_FILE --s3-bucket $S3_BUCKET --output-template-file packaged.yaml
 #      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file $INPUT_FILE --output-template-file output-template.yaml
 
 
