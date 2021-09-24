@@ -7,10 +7,12 @@ environment_variables:
 phases:
   install:
     runtime-versions:
-      python: 3.8
+      python: 3.9
   build:
     commands:
-      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file template.yml --output-template-file output-template.yaml
+      - sam build # gambit
+#      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file $INPUT_FILE --output-template-file output-template.yaml
+
 
 artifacts:
   files:
