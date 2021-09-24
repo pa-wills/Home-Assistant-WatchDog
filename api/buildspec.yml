@@ -6,9 +6,11 @@ environment_variables:
 containers:
   LambdaFunctions:
     phases:
+      install:
+        runtime-versions:
+          python: 3.8
       during_build:
         commands:
-          - pip install --upgrade pip awscli
           - aws cloudformation package --s3-bucket $S3_BUCKET --template-file template.yml --output-template-file output-template.yaml
 
     artifacts:
