@@ -1,3 +1,4 @@
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Parameters: 
   TopicNameParameter: 
@@ -7,7 +8,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
-      CodeUri: ./
+      CodeUri: ./ 
       Description: 'The hearbeat handler function'
       MemorySize: 256
       Timeout: 5
