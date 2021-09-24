@@ -4,10 +4,13 @@ environment_variables:
     "INPUT_FILE": "Template.yml"
     "S3_BUCKET": "codepipeline-ap-southeast-2-9165-8911-9438-artifactstore"
 
+# Phase definitions: https://aws.amazon.com/blogs/apn/an-introduction-to-aws-codebuild/
+
 phases:
   install:
     runtime-versions:
       python: 3.9
+  pre-build:
     commands:
 #      - pip install --upgrade setuptools
 #      - pip install pip -U
