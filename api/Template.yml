@@ -1,14 +1,12 @@
 Transform: 'AWS::Serverless-2016-10-31'
-Description: 'Blueprint for API Gateway custom authorizers, implemented in Python 2.7.'
 Parameters: 
   TopicNameParameter: 
     Type: String
 Resources:
-  apigatewayauthorizerpython:
+  myFIrstHandlerPython:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
-      Runtime: python2.7
       CodeUri: /
       Description: 'Blueprint for API Gateway custom authorizers, implemented in Python 2.7.'
       MemorySize: 256
