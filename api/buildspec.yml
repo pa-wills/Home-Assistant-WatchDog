@@ -3,17 +3,16 @@ environment_variables:
   plaintext:
     "INPUT_FILE": "Template.yml"
     "S3_BUCKET": "codepipeline-ap-southeast-2-9165-8911-9438-artifactstore"
-containers:
-  LambdaFunctions:
-    phases:
-      install:
-        runtime-versions:
-          python: 3.8
-      during_build:
-        commands:
-          - aws cloudformation package --s3-bucket $S3_BUCKET --template-file template.yml --output-template-file output-template.yaml
 
-    artifacts:
-      files:
-        - post-saml.yaml
-        - beta.json 
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+  build:
+    commands:
+      - aws cloudformation package --s3-bucket $S3_BUCKET --template-file template.yml --output-template-file output-template.yaml
+
+artifacts:
+  files:
+    - post-saml.yaml
+    - beta.json 
