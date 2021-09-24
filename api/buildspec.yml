@@ -9,6 +9,7 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
+      - pip install --upgrade setuptools
       - pip install pip -U
       - pip install --user aws-sam-cli
   build:
