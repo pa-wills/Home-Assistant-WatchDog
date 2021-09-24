@@ -53,6 +53,7 @@ Resources:
         - CodeBuildTrustRole
         - Arn
       Source:
+        BuildSpec: api/buildspec.yml
         Type: CODEPIPELINE
       Tags:
         - Key: app-name
