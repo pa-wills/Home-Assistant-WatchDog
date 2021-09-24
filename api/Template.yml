@@ -3,12 +3,12 @@ Parameters:
   TopicNameParameter: 
     Type: String
 Resources:
-  myFIrstHandlerPython:
+  myFirstHandlerPython:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
-      CodeUri: /
-      Description: 'Blueprint for API Gateway custom authorizers, implemented in Python 2.7.'
+      CodeUri: ./
+      Description: 'The hearbeat handler function'
       MemorySize: 256
       Timeout: 5
 
