@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  onHeartbeatFromHomeAssistant:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+      CodeUri: onHeartbeatFromHomeAssistant
+      Description: The hearbeat handler function
+      MemorySize: 256
+      Timeout: 5
+      Runtime: python3.9
+  onCheckHeartbeatRecency:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: onCheckHeatbeatRecency.lambda_handler
+      CodeUri: onCheckHeartbeatRecency
+      Description: The hearbeat recency checkerer handler function
+      MemorySize: 256
+      Timeout: 5
+      Runtime: python3.9
+  HeatbeatDatabaseAllAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: HeatbeatDatabaseAllAccess
+      Description: Allows Lambda functions to call AWS services on your behalf.
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess

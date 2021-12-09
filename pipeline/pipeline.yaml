@@ -12,7 +12,7 @@ Parameters:
     MinLength: "1"
     MaxLength: "80"
     AllowedPattern: "[A-Za-z0-9-]+"
-    Default: Home-Assistant-Watchdog-pipeline
+    Default: HAW-PL
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
   GitHubRepoName:
     Type: String
@@ -32,7 +32,6 @@ Parameters:
     Description: "Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
 
 Resources:
-
   CodeBuildProject:
     DependsOn: [OutputBucket]
     Description: Creating AWS CodeBuild project
@@ -45,7 +44,7 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
           - Name: S3_BUCKET
-            Value: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
+            Value: codepl-astore
         Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-build"
@@ -64,7 +63,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: codepipeline-ap-southeast-2-9165-8911-9438-artifactstore
+      BucketName: codepl-astore
 
   CodeBuildTrustRole:
     Description: Creating service role in IAM for AWS CodeBuild

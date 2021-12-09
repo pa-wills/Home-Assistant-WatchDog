@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  onHeartbeatFromHomeAssistant:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+      CodeUri: . 
+      Description: 'The hearbeat handler function'
+      MemorySize: 256
+      Timeout: 5
+      Runtime: python3.9
+  onCheckHeartbeatRecency:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: onCheckHeatbeatRecency.lambda_handler
+      CodeUri: . 
+      Description: 'The hearbeat recency checkerer handler function'
+      MemorySize: 256
+      Timeout: 5
+      Runtime: python3.9
+
+  HeatbeatDatabaseAllAccessRole:
+    Type:  AWS::IAM::Role
+    Properties:
+      RoleName: HeatbeatDatabaseAllAccess
+      Description: Allows Lambda functions to call AWS services on your behalf.
+      Path: /
+      # Unsure what this does?
+      # https://devops.stackexchange.com/questions/5094/what-is-the-purpose-of-assumerolepolicydocument-in-iam/5099
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: 
+            - lambda.amazonaws.com
+          Action: 
+          - sts:AssumeRole
+      # This next param links the AWS-managed policy to the role.
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+#  HomeAssistantHeartBeatDyDB:
+#    Type: 'AWS::DynamoDB::Table'
+#    DependsOn: HeatbeatDatabaseAllAccessRole
+#    Properties:
+#      TableName: HomeAssistantHeartBeat
+#      BillingMode: PAY_PER_REQUEST
+#      KeySchema:
+#        - AttributeName: ID
+#          KeyType: HASH
+#      AttributeDefinitions:
+#        - AttributeName: ID
+#          AttributeType: S
+
+#      Events:
+#        GetResource:
+#          Type: Api
+#          Properties:
+#            Path: /sam
+#            Method: get
+
+
+
+#      Policies:
+#        - SNSPublishMessagePolicy:
+#            TopicName: !Ref TopicNameParameter
+
+
+#Resources:
+#  HearbeatFromHomeAssistant:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: /
+#      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+#      Runtime: python3.9
+#      Events:
+#        HelloWorld:
+#          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+#          Properties:
+#            Path: /heartbeatFromHomeAssistant
+#            Method: get
+
+
+
+
+
