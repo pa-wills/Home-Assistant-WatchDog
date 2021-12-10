@@ -13,6 +13,13 @@ Resources:
       Timeout: 5
       Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /heartbeat
+            Method: get
+
   onCheckHeartbeatRecency:
     Type: AWS::Serverless::Function
     DependsOn: HeatbeatDatabaseAllAccessRole
