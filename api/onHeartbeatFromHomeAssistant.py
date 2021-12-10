@@ -9,7 +9,7 @@ import datetime
 import json
 import time
 
-def onHeartbeatFromHomeAssistant(event, context):
+def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
     table = dynamodb.Table("HomeAssistantHeartBeat")
     dt_string = datetime.datetime.now().isoformat()

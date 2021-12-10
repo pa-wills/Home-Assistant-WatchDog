@@ -1,23 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:
+
   onHeartbeatFromHomeAssistant:
-    Type: 'AWS::Serverless::Function'
+    Type: AWS::Serverless::Function
+    DependsOn: HeatbeatDatabaseAllAccessRole
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat handler function'
       MemorySize: 256
       Timeout: 5
+      Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
   onCheckHeartbeatRecency:
-    Type: 'AWS::Serverless::Function'
+    Type: AWS::Serverless::Function
+    DependsOn: HeatbeatDatabaseAllAccessRole
     Properties:
       Handler: onCheckHeatbeatRecency.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat recency checkerer handler function'
       MemorySize: 256
       Timeout: 5
+      Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
 
   HeatbeatDatabaseAllAccessRole:
@@ -40,6 +45,14 @@ Resources:
       # This next param links the AWS-managed policy to the role.
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+  HomeAssistantHeartBeatDyDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties: 
+      PrimaryKey:
+        Name: ID
+        Type: String
+      TableName: HomeAssistantHeartBeat
 
 #  HomeAssistantHeartBeatDyDB:
 #    Type: 'AWS::DynamoDB::Table'

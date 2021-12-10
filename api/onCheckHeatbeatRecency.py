@@ -6,7 +6,7 @@ import time
 # Something else - is this even necessary. Could I perhaps get CLoudwatch
 # to do this for me, and if so - maybe just run SNSS off CWatch.
 
-def onCheckHeartbeatRecency(event, context):
+def lambda_handler(event, context):
     notificationThresoldDurationSecs = 5 * 60
 
     # Compute duration since last poll.
