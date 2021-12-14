@@ -102,6 +102,7 @@ Resources:
                   - 'elasticloadbalancing:*'
                   - 'autoscaling:*'
                   - 'cloudwatch:*'
+                  - 'dynamodb:*'
                   - 's3:*'
                   - 'sns:*'
                   - 'cloudformation:*'
