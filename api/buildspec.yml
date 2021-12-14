@@ -11,3 +11,4 @@ phases:
       - cd api
       - sam build
       - sam package --template-file template.yaml --s3-bucket codepl-astore --output-template-file packaged-template.yaml
+      - sam deploy --stack-name test --s3-bucket codepl-astore --capabilities CAPABILITY_IAM CAPBILITY_NAMED_IAM

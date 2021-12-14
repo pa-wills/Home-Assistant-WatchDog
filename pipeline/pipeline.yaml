@@ -197,9 +197,9 @@ Resources:
             OAuthToken: !Ref GitHubToken
             Owner: !Ref GitHubUser
           RunOrder: 1
-      - Name: Build
+      - Name: BuildAndDeploy
         Actions:
-        - Name: build-lambdas
+        - Name: build-and-deploy-lambdas
           InputArtifacts:
           - Name: !Sub "${AppName}-SourceArtifact"
           ActionTypeId:
@@ -210,7 +210,6 @@ Resources:
           OutputArtifacts:
           - Name: !Sub "${AppName}-BuildArtifact"
           Configuration:
-#            ProjectName: !Sub "${AppName}-build"
             ProjectName: !Ref CodeBuildProject
 
           RunOrder: 1
