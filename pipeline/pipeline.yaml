@@ -59,12 +59,11 @@ Resources:
           Value: !Ref AppName
       TimeoutInMinutes: 5
 
-# For the moment I am going to just keep this S3 bucket, and not have it defined in the stack.
-#  OutputBucket:
-#    Type: AWS::S3::Bucket
-#    DeletionPolicy: Retain
-#    Properties:
-#      BucketName: codepl-astore
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: codepl-astore
 
   CodeBuildTrustRole:
     Description: Creating service role in IAM for AWS CodeBuild
