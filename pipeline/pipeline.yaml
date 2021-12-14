@@ -97,13 +97,15 @@ Resources:
                 Action: ["sns:SendMessage"]
               - Effect: Allow
                 Action:
+                  - 'apigateway:*'
                   - 'elasticbeanstalk:*'
                   - 'ec2:*'
                   - 'elasticloadbalancing:*'
                   - 'autoscaling:*'
                   - 'cloudwatch:*'
                   - 'dynamodb:*'
-                  - 'iam.*'
+                  - 'iam:*'
+                  - 'lambda:*'
                   - 's3:*'
                   - 'sns:*'
                   - 'cloudformation:*'
