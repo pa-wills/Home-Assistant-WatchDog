@@ -22,6 +22,6 @@ phases:
       - sam build
       - sam package --template-file template.yaml --s3-bucket codepl-astore --output-template-file packaged-template.yaml
 
-artifacts:
-  files:
-    - packaged-template.yaml
+#artifacts:
+#  files:
+#    - packaged-template.yaml
