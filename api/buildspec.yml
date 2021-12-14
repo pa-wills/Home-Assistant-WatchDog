@@ -18,6 +18,7 @@ phases:
 
 
 #      - sam build --template-file $INPUT_FILE
+      - cd api
       - sam build
       - sam package --template-file api/template.yaml --s3-bucket codepl-astore --output-template-file packaged-template.yaml
 
