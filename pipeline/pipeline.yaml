@@ -95,6 +95,21 @@ Resources:
               - Effect: Allow
                 Resource: ["*"]
                 Action: ["sns:SendMessage"]
+              - Effect: Allow
+                Action:
+                  - 'elasticbeanstalk:*'
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                  - 'autoscaling:*'
+                  - 'cloudwatch:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                  - 'rds:*'
+                  - 'sqs:*'
+                  - 'ecs:*'
+                Resource: '*'
+
 
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
@@ -216,6 +231,4 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref OutputBucket
-
-
 
