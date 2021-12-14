@@ -103,6 +103,7 @@ Resources:
                   - 'autoscaling:*'
                   - 'cloudwatch:*'
                   - 'dynamodb:*'
+                  - 'iam.*'
                   - 's3:*'
                   - 'sns:*'
                   - 'cloudformation:*'
