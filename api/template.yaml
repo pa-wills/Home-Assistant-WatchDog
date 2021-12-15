@@ -2,6 +2,16 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:
 
+  # DynamoDB
+  HomeAssistantHeartBeatDyDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties: 
+      PrimaryKey:
+        Name: ID
+        Type: String
+      TableName: HomeAssistantHeartBeat
+
+  # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
     DependsOn: HeatbeatDatabaseAllAccessRole
@@ -32,6 +42,7 @@ Resources:
       Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
 
+  # Roles
   HeatbeatDatabaseAllAccessRole:
     Type:  AWS::IAM::Role
     Properties:
@@ -53,54 +64,16 @@ Resources:
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
 
-  HomeAssistantHeartBeatDyDB:
-    Type: AWS::Serverless::SimpleTable
-    Properties: 
-      PrimaryKey:
-        Name: ID
-        Type: String
-      TableName: HomeAssistantHeartBeat
+  
+  # SNS
+  HeartbeatNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      FifoTopic: false
+      Subscription:
+        - Endpoint: "+61457805418"
+          Protocol: "sms"
 
-#  HomeAssistantHeartBeatDyDB:
-#    Type: 'AWS::DynamoDB::Table'
-#    DependsOn: HeatbeatDatabaseAllAccessRole
-#    Properties:
-#      TableName: HomeAssistantHeartBeat
-#      BillingMode: PAY_PER_REQUEST
-#      KeySchema:
-#        - AttributeName: ID
-#          KeyType: HASH
-#      AttributeDefinitions:
-#        - AttributeName: ID
-#          AttributeType: S
-
-#      Events:
-#        GetResource:
-#          Type: Api
-#          Properties:
-#            Path: /sam
-#            Method: get
-
-
-
-#      Policies:
-#        - SNSPublishMessagePolicy:
-#            TopicName: !Ref TopicNameParameter
-
-
-#Resources:
-#  HearbeatFromHomeAssistant:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      CodeUri: /
-#      Handler: onHeartbeatFromHomeAssistant.lambda_handler
-#      Runtime: python3.9
-#      Events:
-#        HelloWorld:
-#          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-#          Properties:
-#            Path: /heartbeatFromHomeAssistant
-#            Method: get
 
 
 
