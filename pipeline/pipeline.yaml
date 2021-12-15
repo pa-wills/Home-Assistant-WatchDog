@@ -87,31 +87,13 @@ Resources:
                 Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
                 Resource: ["*"]
               - Effect: Allow
-                Resource: ["*"]
-                Action: ["s3:*"]
-              - Effect: Allow
-                Resource: ["*"]
-                Action: ["kms:GenerateDataKey*", "kms:Encrypt", "kms:Decrypt"]
-              - Effect: Allow
-                Resource: ["*"]
-                Action: ["sns:SendMessage"]
-              - Effect: Allow
                 Action:
                   - 'apigateway:*'
-                  - 'elasticbeanstalk:*'
-                  - 'ec2:*'
-                  - 'elasticloadbalancing:*'
-                  - 'autoscaling:*'
-                  - 'cloudwatch:*'
                   - 'dynamodb:*'
                   - 'iam:*'
                   - 'lambda:*'
                   - 's3:*'
-                  - 'sns:*'
                   - 'cloudformation:*'
-                  - 'rds:*'
-                  - 'sqs:*'
-                  - 'ecs:*'
                 Resource: '*'
 
 
