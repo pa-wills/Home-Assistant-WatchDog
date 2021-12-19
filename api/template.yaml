@@ -55,11 +55,18 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Action:
-              - 'lambda:*'
-              - 'sns:*'
-            Resource: '*'
-
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SNSRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sns:*'
+                Resource: '*'
   
   # SNS
   HeartbeatNotificationTopic:
