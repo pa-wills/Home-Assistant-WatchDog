@@ -19,10 +19,10 @@ Resources:
       Description: 'This is the trigger for the HB-checking lambda'
       ScheduleExpression: rate(5 minutes)
       State: ENABLED
-      Target: 
+      Targets: 
         Arn: !GetAtt onCheckHeartbeatRecency.Arn
         Id: 1234IDeclareAEBWar
-        
+
 
   # Lambdas
   onHeartbeatFromHomeAssistant:
