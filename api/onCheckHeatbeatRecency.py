@@ -3,15 +3,11 @@ import json
 import datetime
 import time
 
-# Something else - is this even necessary. Could I perhaps get CLoudwatch
-# to do this for me, and if so - maybe just run SNSS off CWatch.
-
 def lambda_handler(event, context):
     notificationThresoldDurationSecs = 5 * 60
 
     client = boto3.client("sns")
     arnTopic = (client.list_topics())["Topics"][0]["TopicArn"]
-#    print(arnTopic)
 
     # Compute duration since last poll.
     now = datetime.datetime.now()
@@ -29,7 +25,7 @@ def lambda_handler(event, context):
     if (deltaSecs > notificationThresoldDurationSecs):
         notify = True
         # TODO notification
-        client.publish(TopicArn = arnTopic, Message = "No heartbeat from 8 Faraday.")
+        client.publish(TopicArn = arnTopic, Message = "No heartbeat from 8 Faraday for > 5 minutes")
 
         # TODO set flag and put item
     

@@ -11,6 +11,19 @@ Resources:
         Type: String
       TableName: HomeAssistantHeartBeat
 
+  # EventBridge
+  scheduleCheckHeartbeat:
+    DependsOn: [onCheckHeartbeatRecency]
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'This is the trigger for the HB-checking lambda'
+      ScheduleExpression: rate(5 minutes)
+      State: ENABLED
+      Target: 
+        Arn: !GetAtt onCheckHeartbeatRecency.Arn
+        Id: 1234IDeclareAEBWar
+        
+
   # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
@@ -36,7 +49,7 @@ Resources:
     Properties:
       Handler: onCheckHeatbeatRecency.lambda_handler
       CodeUri: . 
-      Description: 'The hearbeat recency checkerer handler function'
+      Description: 'The hearbeat recency-checker handler function'
       MemorySize: 256
       Timeout: 5
       Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
