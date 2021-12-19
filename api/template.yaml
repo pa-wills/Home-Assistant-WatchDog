@@ -65,6 +65,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - 'dynamodb:*'
                   - 'sns:*'
                 Resource: '*'
   
