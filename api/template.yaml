@@ -17,7 +17,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: 'This is the trigger for the HB-checking lambda'
-      ScheduleExpression: rate(5 minutes)
+      ScheduleExpression: rate(20 minutes)
       State: ENABLED
       Targets: 
         -
@@ -103,9 +103,6 @@ Resources:
       Subscription:
         - Endpoint: "+61457805418"
           Protocol: "sms"
-
-
-
 
 
 
