@@ -60,9 +60,10 @@ Resources:
             - lambda.amazonaws.com
           Action: 
           - sts:AssumeRole
-      # This next param links the AWS-managed policy to the role.
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - Effect: Allow
+          Action:
+            - 'sns:*'
+          Resource: '*'
 
   
   # SNS

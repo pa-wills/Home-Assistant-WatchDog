@@ -9,6 +9,10 @@ import time
 def lambda_handler(event, context):
     notificationThresoldDurationSecs = 5 * 60
 
+    client = boto3.client("sns")
+    arnTopic = (client.list_topics())["Topics"][0]["TopicArn"]
+#    print(arnTopic)
+
     # Compute duration since last poll.
     now = datetime.datetime.now()
     dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
@@ -25,6 +29,8 @@ def lambda_handler(event, context):
     if (deltaSecs > notificationThresoldDurationSecs):
         notify = True
         # TODO notification
+        client.publish(TopicArn = arnTopic, Message = "No heartbeat from 8 Faraday.")
+
         # TODO set flag and put item
     
     return {
