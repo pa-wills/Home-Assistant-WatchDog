@@ -94,6 +94,7 @@ Resources:
                   - 'iam:*'
                   - 'lambda:*'
                   - 's3:*'
+                  - 'sns:*'
                   - 'cloudformation:*'
                 Resource: '*'
 
