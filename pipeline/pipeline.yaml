@@ -90,6 +90,7 @@ Resources:
                 Action:
                   - 'apigateway:*'
                   - 'dynamodb:*'
+                  - 'events:*'
                   - 'iam:*'
                   - 'lambda:*'
                   - 's3:*'

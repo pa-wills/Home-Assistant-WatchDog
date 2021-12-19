@@ -56,6 +56,18 @@ Resources:
       Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
 
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: "onCheckHeartbeatRecency"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "scheduleCheckHeartbeat"
+          - "Arn"
+
   # Roles
   HeatbeatDatabaseAllAccessRole:
     Type:  AWS::IAM::Role
