@@ -15,4 +15,4 @@ phases:
 #      - python3 _smokeTest.py
 artifacts:
   files:
-    packaged-template.yaml
+    - "**/*"
