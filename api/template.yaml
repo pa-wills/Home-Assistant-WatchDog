@@ -4,7 +4,13 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   HeartbeatCheckPeriodParameter:
     Type: String
-    Default: rate(20 minutes)
+    Default: "rate(20 minutes)"
+  NotificationMessageStringParameter:
+    Type: String
+    Default: "No recent heartbeat from Home Assistant."
+  NotificationFlatlinePeriodBeforeParameter:
+    Type: Number
+    Default: 5
 
 Resources:
 
@@ -64,8 +70,10 @@ Resources:
       Runtime: python3.9
       Environment:
         Variables:
-          NOTIFICATION_MESSAGE: "No recent heartbeat from Home Assistant."
-          NOTIFICATION_WAIT_MINS: 5
+          NOTIFICATION_MESSAGE: 
+            Ref: NotificationMessageStringParameter # Text of notification message.
+          NOTIFICATION_WAIT_MINS: 
+            Ref: NotificationFlatlinePeriodBeforeParameter # Number of mins to wait before 
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
