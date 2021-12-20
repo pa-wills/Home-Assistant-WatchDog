@@ -6,10 +6,10 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   EnvironmentType:
     Description: "Environment Type"
-    Default: "prod"
+    Default: "Prod"
     Type: String
-    AllowedValues: ["prod", "test"]
-    ConstraintDescription: "Must specify either \'prod\' or \'test\'"
+    AllowedValues: ["Prod", "Test"]
+    ConstraintDescription: "Must specify either Prod or Test"
   HeartbeatCheckPeriodParameter:
     Description: "Number of mins that the Watchdog waits between checks for recent hearbeats (expressed as a rate expression)."
     Type: String
@@ -29,10 +29,10 @@ Parameters:
     Type: String
     Default: "+61400000000"
   
-# SNS bevahiour will change depending on EnvType.
+# SNS bevahiour will change depending on EnvType. Everything else is the same either way.
 Conditions:
-  CreateProdResources: !Equals [!Ref EnvType, prod]
-  CreateTestResources: !Equals [!Ref EnvType, test]
+  CreateProdResources: !Equals [!Ref EnvType, Prod]
+  CreateTestResources: !Equals [!Ref EnvType, Test]
 
 Resources:
 
