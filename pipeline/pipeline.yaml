@@ -12,7 +12,7 @@ Parameters:
     MinLength: "1"
     MaxLength: "80"
     AllowedPattern: "[A-Za-z0-9-]+"
-    Default: HAsstWDog
+    Default: HomeAssistantWatchDog
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
   GitHubRepoName:
     Type: String
@@ -21,11 +21,11 @@ Parameters:
   GitHubRepoBranch:
     Type: String
     Description: "The GitHub repo branch code pipelines should watch for changes on."
-    Default: dev
+    Default: main
   GitHubUser:
     Type: String
     Description: "GitHub UserName. This username must have access to the GitHubToken."
-    Default: pa-wills    
+    Default: pa-wills
   GitHubToken:
     NoEcho: true
     Type: String
@@ -39,7 +39,7 @@ Resources:
     Properties:
       Artifacts:
         Type: CODEPIPELINE
-      Description: !Sub "Building stage for ${AppName}."
+      Description: !Sub "Build + Deploy stage for ${AppName}."
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
@@ -63,7 +63,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: codepl-astore
+      BucketName: !Sub "${AppName}-codepl-astore"
 
   CodeBuildTrustRole:
     Description: Creating service role in IAM for AWS CodeBuild
@@ -79,7 +79,7 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: CodeBuildRolePolicy
+        - PolicyName: !Sub "${AppName}-CodeBuildRolePolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -104,7 +104,7 @@ Resources:
   CodePipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: AWS-CodePipeline-Service-Role
+      RoleName: !Sub "${AppName}-CodePipeline-Service-Role"
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -115,7 +115,7 @@ Resources:
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: CodePipelineRolePolicy
+        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -178,7 +178,7 @@ Resources:
     DependsOn: [CodePipelineServiceRole, CodeBuildProject]
     Description: The pipeline. Kind of the core of things, really.
     Properties:
-      Name: Home-Assistant-Watchdog-pipeline
+      Name: !Sub "${AppName}-CodePipeline"
       RoleArn: !GetAtt
         - CodePipelineServiceRole
         - Arn
@@ -200,9 +200,9 @@ Resources:
             OAuthToken: !Ref GitHubToken
             Owner: !Ref GitHubUser
           RunOrder: 1
-      - Name: BuildAndDeploy
+      - Name: Production
         Actions:
-        - Name: build-and-deploy-lambdas
+        - Name: build-and-deploy-app
           InputArtifacts:
           - Name: !Sub "${AppName}-SourceArtifact"
           ActionTypeId:
