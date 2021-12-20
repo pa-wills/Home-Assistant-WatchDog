@@ -138,6 +138,7 @@ Resources:
   
   # SNS
   HeartbeatNotificationTopic:
+    Type:  AWS::SNS::Topic
     Condition: CreateProdResources
     Properties:
       FifoTopic: false
