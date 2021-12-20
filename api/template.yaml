@@ -4,8 +4,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   HeartbeatCheckPeriodParameter:
     Type: String
-    Deafult: rate(20 minutes)
-
+    Default: rate(20 minutes)
 
 Resources:
 
