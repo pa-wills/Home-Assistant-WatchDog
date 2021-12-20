@@ -13,6 +13,6 @@ phases:
       - sam package --template-file template.yaml --s3-bucket hawpl-codepl-astore --output-template-file packaged-template.yaml
 #      - sam deploy --stack-name HomeAssistantWatchDog --s3-bucket hawpl-codepl-astore --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 #      - python3 _smokeTest.py
-  artifacts:
-    files:
-      packaged-template.yaml
+artifacts:
+  files:
+    packaged-template.yaml

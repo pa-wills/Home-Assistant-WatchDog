@@ -98,6 +98,7 @@ Resources:
                   - 'cloudformation:*'
                 Resource: '*'
 
+  # The creating user needs to have IAM::PassRole in order to make this work.
   CloudFormationTrustRole:
     Description: Creating service role in IAM for AWS CloudFormation
     Type: AWS::IAM::Role
@@ -126,34 +127,6 @@ Resources:
                   - 'sns:*'
                   - 'cloudformation:*'
                 Resource: '*'
-
-
-        - Action: ["s3:GetObject", "s3:GetObjectVersion", "s3:GetBucketVersioning"]
-          Resource: "*"
-          Effect: Allow
-        - Action: ["s3:PutObject"]
-          Resource: ["arn:aws:s3:::codepipeline*"]
-          Effect: Allow
-        - Action: ["lambda:*"]
-          Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
-          Effect: Allow
-        - Action: ["apigateway:*"]
-          Resource: !Sub "arn:aws:apigateway:${AWS::Region}::*"
-          Effect: Allow
-        - Action: ["iam:GetRole", "iam:CreateRole", "iam:DeleteRole"]
-          Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AppName}-*"
-          Effect: Allow
-        - Action: ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
-          Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AppName}-*"
-          Effect: Allow
-        - Action: ["iam:PassRole"]
-          Resource: ["*"]
-          Effect: Allow
-        - Action: ["cloudformation:CreateChangeSet"]
-          Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31"
-          Effect: Allow
-      Roles: [!Ref CloudFormationTrustRole]
-
 
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
@@ -238,6 +211,9 @@ Resources:
       RoleArn: !GetAtt
         - CodePipelineServiceRole
         - Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref OutputBucket
       Stages:
       - Name: Source
         Actions:
@@ -270,6 +246,7 @@ Resources:
           - Name: !Sub "${AppName}-BuildArtifact"
           Configuration:
             ProjectName: !Ref CodeBuildProject
+          RunOrder: 1
         - Name: create-changeset
           InputArtifacts:
           - Name: !Sub "${AppName}-BuildArtifact"
@@ -280,16 +257,15 @@ Resources:
             Provider: CloudFormation
           OutputArtifacts: []
           Configuration:
-            StackName: !Sub "${AppName}-serverless-stack"
+            StackName: !Sub "${AppName}"
             ActionMode: CHANGE_SET_REPLACE
-            RoleArn: !Ref CloudFormationTrustRole
+            RoleArn: !GetAtt 
+              - CloudFormationTrustRole
+              - Arn
             ChangeSetName: pipeline-changeset
-            Capabilities: CAPABILITY_NAMED_IAM
+            Capabilities: CAPABILITY_IAM, CAPABILITY_NAMED_IAM
             TemplatePath: !Sub "${AppName}-BuildArtifact::post-saml.yml"
 #            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
-          RunOrder: 1
+          RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
 
-      ArtifactStore:
-        Type: S3
-        Location: !Ref OutputBucket
 
