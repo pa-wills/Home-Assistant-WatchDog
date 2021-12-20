@@ -1,16 +1,38 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
+# Annoyingly - updates to the params don't seem to trigger re-deployment of the associated Lambdas.
+# Re-running the pipeline from zero _does_ seem to work, though you'd hope such action was unnecessary.
 Parameters:
+  EnvironmentType:
+    Description: "Environment Type"
+    Default: "prod"
+    Type: String
+    AllowedValues: ["prod", "test"]
+    ConstraintDescription: "Must specify either \'prod\' or \'test\'"
   HeartbeatCheckPeriodParameter:
+    Description: "Number of mins that the Watchdog waits between checks for recent hearbeats (expressed as a rate expression)."
     Type: String
     Default: "rate(20 minutes)"
   NotificationMessageStringParameter:
+    Description: "The notification string (regardless of how transported)."
     Type: String
     Default: "No recent heartbeat from Home Assistant."
   NotificationFlatlinePeriodBeforeParameter:
+    Description: "Number of mins that the Watchdog waits before considering the host to be dead."
     Type: Number
     Default: 30
+  NotificationEmailEndpoint:
+    Type: String
+    Default: "nyer@foo.com"
+  NotificationSmsEndpoint:
+    Type: String
+    Default: "+61400000000"
+  
+# SNS bevahiour will change depending on EnvType.
+Conditions:
+  CreateProdResources: !Equals [!Ref EnvType, prod]
+  CreateTestResources: !Equals [!Ref EnvType, test]
 
 Resources:
 
@@ -120,8 +142,13 @@ Resources:
     Properties:
       FifoTopic: false
       Subscription:
-        - Endpoint: "+61457805418"
-          Protocol: "sms"
-
+        !If
+          - CreateProdResources
+          -
+            - Endpoint: Ref: NotificationEmailEndpoint
+              Protocol: "sms"
+          -
+            - Endpoint: Ref: NotificationSmsEndpoint
+              Protocol: "email"
 
 
