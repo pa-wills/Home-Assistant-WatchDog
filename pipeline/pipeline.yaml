@@ -32,14 +32,15 @@ Parameters:
     Description: "Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
 
 Resources:
-  CodeBuildProject:
+  # Build stage (first of two CodeBuild Objects).
+  CodeBuildProject1:
     DependsOn: [OutputBucket]
-    Description: Creating AWS CodeBuild project
+    Description: This is the build sub-stage. Uses sam build / package to create .zips of the lambdas, etc.
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
         Type: CODEPIPELINE
-      Description: !Sub "Build + Deploy stage for ${AppName}."
+      Description: !Sub "Build action for ${AppName}."
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
@@ -58,6 +59,31 @@ Resources:
         - Key: app-name
           Value: !Ref AppName
       TimeoutInMinutes: 5
+
+  # Build stage (first of two CodeBuild Objects).
+  CodeBuildProject1:
+    Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Description: !Sub "PVT action for ${AppName}."
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
+        Type: LINUX_CONTAINER
+      Name: !Sub "${AppName}-pvt"
+      ServiceRole: !GetAtt
+        - CodeBuildTrustRole
+        - Arn
+      Source:
+        BuildSpec: api/pvtspec.yml
+        Type: CODEPIPELINE
+      Tags:
+        - Key: app-name
+          Value: !Ref AppName
+      TimeoutInMinutes: 5
+
 
   OutputBucket:
     Type: AWS::S3::Bucket

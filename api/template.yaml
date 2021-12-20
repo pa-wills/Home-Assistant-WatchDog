@@ -141,7 +141,6 @@ Resources:
     Type:  AWS::SNS::Topic
     Condition: CreateProdResources
     Properties:
-      FifoTopic: false
       Subscription:
         - Endpoint: 
             Ref: NotificationSmsEndpoint
@@ -150,7 +149,6 @@ Resources:
     Type:  AWS::SNS::Topic
     Condition: CreateTestResources
     Properties:
-      FifoTopic: false
       Subscription:
         - Endpoint: 
             Ref: NotificationEmailEndpoint
