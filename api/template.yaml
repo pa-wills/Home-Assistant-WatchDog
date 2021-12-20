@@ -4,7 +4,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   HeartbeatCheckPeriodParameter:
     Type: String
-    Default: rate(15 minutes)
+    Default: rate(20 minutes) 
 
 Resources:
 
@@ -35,14 +35,14 @@ Resources:
   # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
-    DependsOn: HeatbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatDatabaseAllAccessRole
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat handler function'
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
       Events:
         GetResource:
@@ -53,15 +53,18 @@ Resources:
 
   onCheckHeartbeatRecency:
     Type: AWS::Serverless::Function
-    DependsOn: HeatbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatDatabaseAllAccessRole
     Properties:
-      Handler: onCheckHeatbeatRecency.lambda_handler
+      Handler: onCheckHeartbeatRecency.lambda_handler
       CodeUri: . 
-      Description: 'The hearbeat recency-checker handler function'
+      Description: 'The hearbeat time-checker handler function'
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeatbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
       Runtime: python3.9
+      Environment:
+        Variables:
+          NOTIFICATION_MESSAGE: "No recent heartbeat from Home Assistant."
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
@@ -76,10 +79,10 @@ Resources:
           - "Arn"
 
   # Roles
-  HeatbeatDatabaseAllAccessRole:
+  HeartbeatDatabaseAllAccessRole:
     Type:  AWS::IAM::Role
     Properties:
-      RoleName: HeatbeatDatabaseAllAccess
+      RoleName: HeartbeatDatabaseAllAccess
       Description: Allows Lambda functions to call AWS services on your behalf.
       Path: /
       # Unsure what this does?

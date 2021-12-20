@@ -1,13 +1,14 @@
 import boto3
 import json
 import datetime
+import os
 import time
 
 def lambda_handler(event, context):
     notificationThresoldDurationSecs = 5 * 60
 
     client = boto3.client("sns")
-    arnTopic = (client.list_topics())["Topics"][0]["TopicArn"]
+    arnTopic = (client.list_topics())["Topics"][0]["TopicArn"] # Hacky as.
 
     # Compute duration since last poll.
     now = datetime.datetime.now()
@@ -25,7 +26,7 @@ def lambda_handler(event, context):
     if (deltaSecs > notificationThresoldDurationSecs):
         notify = True
         # TODO notification
-        client.publish(TopicArn = arnTopic, Message = "No heartbeat from 8 Faraday for > 5 minutes")
+        client.publish(TopicArn = arnTopic, Message = str(os.environ.get('NOTIFICATION_MESSAGE')))
 
         # TODO set flag and put item
     
