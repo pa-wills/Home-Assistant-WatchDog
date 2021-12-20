@@ -31,8 +31,8 @@ Parameters:
   
 # SNS bevahiour will change depending on EnvType. Everything else is the same either way.
 Conditions:
-  CreateProdResources: !Equals [!Ref EnvType, Prod]
-  CreateTestResources: !Equals [!Ref EnvType, Test]
+  CreateProdResources: !Equals [!Ref EnvironmentType, Prod]
+  CreateTestResources: !Equals [!Ref EnvironmentType, Test]
 
 Resources:
 
