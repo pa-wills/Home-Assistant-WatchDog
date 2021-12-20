@@ -32,37 +32,5 @@ Obviously see the Issues, but in general:
 
 ## Things I found difficult / helpful
 * Most notably there's this helpful [sample app](https://github.com/aws-samples/aws-serverless-samfarm), and [video](https://www.youtube.com/watch?v=P7i01eqmzrs&t=1508s). I used this as a guide for designing the app. I especially love their idea of incorporating the pipeline _and_ the app itself as separate stacks within a common repo. This idea is elegant, and I would never have thought to do it.
-
-
-https://www.youtube.com/watch?v=P7i01eqmzrs
-
-
-
-## Here's a few resources that were helpful
-https://www.youtube.com/watch?v=P7i01eqmzrs
-
-
-https://www.freecodecamp.org/news/how-to-build-a-serverless-application-using-aws-sam/
-Here's the how-to
-
-https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/sample-templates-services-us-west-2.html#w2ab1c35c58c13c15
-List of templates.
-
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-getting-started-hello-world.html
-Complete HelloWorld
-
-https://github.com/amazon-archives/serverless-app-examples
-Repo of examples
-
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-permissions.html
-Perhaps these are the perms I need. Set up a new user with these.
-
-# Progress
-Attack the HellowWorld example.
-
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy.html
-
-I suspect that it is defaulting to an invalid S3 bucket name. I should specify it, to eliminate the error.
-
-https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy.html
+* Creating the application components individualls in the console turned out to be pretty easy. On reflection the hard part for me was trying to learn CloudFormation, SAM and CodePipeline simulatenously. I probably made that harder for myself by insisting on defining everything statically, bottom-up from the CF template. 
 
