@@ -4,7 +4,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   HeartbeatCheckPeriodParameter:
     Type: String
-    Default: rate(20 minutes) 
+    Default: rate(20 minutes)
 
 Resources:
 
@@ -65,6 +65,7 @@ Resources:
       Environment:
         Variables:
           NOTIFICATION_MESSAGE: "No recent heartbeat from Home Assistant."
+          NOTIFICATION_WAIT_MINS: 5
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission

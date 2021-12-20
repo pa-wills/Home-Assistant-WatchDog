@@ -5,7 +5,7 @@ import os
 import time
 
 def lambda_handler(event, context):
-    notificationThresoldDurationSecs = 5 * 60
+    notificationThresoldDurationSecs = int(os.environ.get('NOTIFICATION_WAIT_MINS')) * 60
 
     client = boto3.client("sns")
     arnTopic = (client.list_topics())["Topics"][0]["TopicArn"] # Hacky as.
@@ -25,10 +25,7 @@ def lambda_handler(event, context):
     notify = False
     if (deltaSecs > notificationThresoldDurationSecs):
         notify = True
-        # TODO notification
         client.publish(TopicArn = arnTopic, Message = str(os.environ.get('NOTIFICATION_MESSAGE')))
-
-        # TODO set flag and put item
     
     return {
         # TODO: clean up.
