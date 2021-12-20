@@ -12,7 +12,7 @@ Parameters:
     MinLength: "1"
     MaxLength: "80"
     AllowedPattern: "[A-Za-z0-9-]+"
-    Default: HomeAssistantWatchDog
+    Default: HomeAssistantWatchDogPipeline
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
   GitHubRepoName:
     Type: String
@@ -63,7 +63,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: !Sub "${AppName}-codepl-astore"
+      BucketName: hawpl-codepl-astore
 
   CodeBuildTrustRole:
     Description: Creating service role in IAM for AWS CodeBuild
