@@ -257,15 +257,29 @@ Resources:
             Provider: CloudFormation
           OutputArtifacts: []
           Configuration:
-            StackName: !Sub "${AppName}"
+            StackName: HomeAssistantWatchDog
             ActionMode: CHANGE_SET_REPLACE
             RoleArn: !GetAtt 
               - CloudFormationTrustRole
               - Arn
             ChangeSetName: pipeline-changeset
-            Capabilities: CAPABILITY_IAM, CAPABILITY_NAMED_IAM
-            TemplatePath: !Sub "${AppName}-BuildArtifact::post-saml.yml"
+            Capabilities: CAPABILITY_NAMED_IAM
+            TemplatePath: !Sub "${AppName}-BuildArtifact::api/packaged-template.yaml"
 #            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
           RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
+        - Name: execute-changeset
+          InputArtifacts: []
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            StackName: HomeAssistantWatchDog
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: pipeline-changeset
+          RunOrder: 3 
+
 
 
