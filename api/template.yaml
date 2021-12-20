@@ -145,10 +145,12 @@ Resources:
         !If
           - CreateProdResources
           -
-            - Endpoint: Ref: NotificationEmailEndpoint
+            - Endpoint: 
+                Ref: NotificationEmailEndpoint
               Protocol: "sms"
           -
-            - Endpoint: Ref: NotificationSmsEndpoint
+            - Endpoint: 
+                Ref: NotificationSmsEndpoint
               Protocol: "email"
 
 
