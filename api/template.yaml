@@ -146,4 +146,13 @@ Resources:
         - Endpoint: 
             Ref: NotificationSmsEndpoint
           Protocol: "sms"
+  HeartbeatNotificationTopicTest:
+    Type:  AWS::SNS::Topic
+    Condition: CreateTestResources
+    Properties:
+      FifoTopic: false
+      Subscription:
+        - Endpoint: 
+            Ref: NotificationEmailEndpoint
+          Protocol: "email"
 
