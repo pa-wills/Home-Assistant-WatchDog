@@ -144,6 +144,6 @@ Resources:
       FifoTopic: false
       Subscription:
         - Endpoint: 
-            Ref: NotificationEmailEndpoint
+            Ref: NotificationSmsEndpoint
           Protocol: "sms"
 
