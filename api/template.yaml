@@ -1,5 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  HeartbeatCheckPeriodParameter:
+    Type: String
+    Deafult: rate(20 minutes)
+
+
 Resources:
 
   # DynamoDB
@@ -17,7 +24,8 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: 'This is the trigger for the HB-checking lambda'
-      ScheduleExpression: rate(20 minutes)
+      ScheduleExpression:
+        Ref: HeartbeatCheckPeriodParameter
       State: ENABLED
       Targets: 
         -
