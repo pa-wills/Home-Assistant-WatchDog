@@ -98,21 +98,6 @@ Resources:
                   - 'cloudformation:*'
                 Resource: '*'
 
-  CodeDeployServiceRole:
-    Description: Creating service role in IAM for AWS CodeDeploy
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "${AppName}-codedeploy-role"
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [codedeploy.amazonaws.com]
-            Action: sts:AssumeRole
-      Path: /
-
-
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
   CodePipelineServiceRole:
@@ -216,7 +201,7 @@ Resources:
           RunOrder: 1
       - Name: Production
         Actions:
-        - Name: build-and-deploy-app
+        - Name: build-app
           InputArtifacts:
           - Name: !Sub "${AppName}-SourceArtifact"
           ActionTypeId:
@@ -228,8 +213,25 @@ Resources:
           - Name: !Sub "${AppName}-BuildArtifact"
           Configuration:
             ProjectName: !Ref CodeBuildProject
-
+        - Name: create-changeset
+          InputArtifacts:
+          - Name: !Sub "${AppName}-BuildArtifact"
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            StackName: !Sub "${AppName}-serverless-stack"
+            ActionMode: CHANGE_SET_REPLACE
+            RoleArn: !Ref CodeBuildTrustRole
+            ChangeSetName: pipeline-changeset
+            Capabilities: CAPABILITY_NAMED_IAM
+            TemplatePath: !Sub "${AppName}-BuildArtifact::post-saml.yml"
+#            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
           RunOrder: 1
+
       ArtifactStore:
         Type: S3
         Location: !Ref OutputBucket
