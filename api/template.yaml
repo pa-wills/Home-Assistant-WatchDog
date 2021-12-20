@@ -10,7 +10,7 @@ Parameters:
     Default: "No recent heartbeat from Home Assistant."
   NotificationFlatlinePeriodBeforeParameter:
     Type: Number
-    Default: 5
+    Default: 30
 
 Resources:
 
@@ -73,7 +73,7 @@ Resources:
           NOTIFICATION_MESSAGE: 
             Ref: NotificationMessageStringParameter # Text of notification message.
           NOTIFICATION_WAIT_MINS: 
-            Ref: NotificationFlatlinePeriodBeforeParameter # Number of mins to wait before 
+            Ref: NotificationFlatlinePeriodBeforeParameter # Number of mins to wait before.
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
