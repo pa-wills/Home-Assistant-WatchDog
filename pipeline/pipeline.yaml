@@ -12,7 +12,7 @@ Parameters:
     MinLength: "1"
     MaxLength: "80"
     AllowedPattern: "[A-Za-z0-9-]+"
-    Default: HAW-PL
+    Default: HAsstWDog
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
   GitHubRepoName:
     Type: String

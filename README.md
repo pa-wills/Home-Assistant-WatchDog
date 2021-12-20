@@ -27,10 +27,11 @@ Obviously see the Issues, but in general:
 * It would be nice to add more robust testing to the pipeline.
 * Parameter'ize the polling frequency.
 * Hide my phone number, etc.
-* Multi-environment.
+* Multi-environment (I.e. separate dev / prod).
+* Cleanup lambda - so that there's no need for manual activity.
 
 ## Things I found difficult / helpful
-
+* Most notably there's this helpful [sample app](https://github.com/aws-samples/aws-serverless-samfarm), and [video](https://www.youtube.com/watch?v=P7i01eqmzrs&t=1508s). I used this as a guide for designing the app. I especially love their idea of incorporating the pipeline _and_ the app itself as separate stacks within a common repo. This idea is elegant, and I would never have thought to do it.
 
 
 https://www.youtube.com/watch?v=P7i01eqmzrs
@@ -64,28 +65,4 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/s
 I suspect that it is defaulting to an invalid S3 bucket name. I should specify it, to eliminate the error.
 
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy.html
-
-interesting walk-through
-
-PErhaps try creating the bucket explicitly, and go from there.
-No difference
-
-https://lumigo.io/aws-lambda-deployment/aws-lambda-cloudformation/
-ANother interesting walkthrough.
-
-https://iamondemand.com/blog/how-to-deploy-your-lambda-functions-with-cloudformation/
-One more.
-
-https://aws.amazon.com/cloudformation/resources/templates/ap-southeast-2/
-Maybe let's just try to get one of these working from the CForm Comsole
-
-DynamoDB_Table.template - looks innocuous
-..... and it works. So, that's something. Perhaps I can work on a definition that 
-
-https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
-
-The example I keep returning to
-https://www.youtube.com/watch?v=P7i01eqmzrs&t=1508s
-https://github.com/aws-samples/aws-serverless-samfarm
-
 
