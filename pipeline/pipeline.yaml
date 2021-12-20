@@ -98,6 +98,20 @@ Resources:
                   - 'cloudformation:*'
                 Resource: '*'
 
+  CodeDeployServiceRole:
+    Description: Creating service role in IAM for AWS CodeDeploy
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-codedeploy-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [codedeploy.amazonaws.com]
+            Action: sts:AssumeRole
+      Path: /
+
 
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
