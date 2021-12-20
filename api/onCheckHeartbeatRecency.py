@@ -4,6 +4,7 @@ import datetime
 import os
 import time
 
+
 def lambda_handler(event, context):
     notificationThresoldDurationSecs = int(os.environ.get('NOTIFICATION_WAIT_MINS')) * 60
 
