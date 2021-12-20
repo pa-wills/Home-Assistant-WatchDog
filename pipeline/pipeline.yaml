@@ -98,6 +98,63 @@ Resources:
                   - 'cloudformation:*'
                 Resource: '*'
 
+  CloudFormationTrustRole:
+    Description: Creating service role in IAM for AWS CloudFormation
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-cloudformation-role"
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [cloudformation.amazonaws.com]
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${AppName}-CloudFormationRolePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'apigateway:*'
+                  - 'dynamodb:*'
+                  - 'events:*'
+                  - 'iam:*'
+                  - 'lambda:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                Resource: '*'
+
+
+        - Action: ["s3:GetObject", "s3:GetObjectVersion", "s3:GetBucketVersioning"]
+          Resource: "*"
+          Effect: Allow
+        - Action: ["s3:PutObject"]
+          Resource: ["arn:aws:s3:::codepipeline*"]
+          Effect: Allow
+        - Action: ["lambda:*"]
+          Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          Effect: Allow
+        - Action: ["apigateway:*"]
+          Resource: !Sub "arn:aws:apigateway:${AWS::Region}::*"
+          Effect: Allow
+        - Action: ["iam:GetRole", "iam:CreateRole", "iam:DeleteRole"]
+          Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AppName}-*"
+          Effect: Allow
+        - Action: ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
+          Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AppName}-*"
+          Effect: Allow
+        - Action: ["iam:PassRole"]
+          Resource: ["*"]
+          Effect: Allow
+        - Action: ["cloudformation:CreateChangeSet"]
+          Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31"
+          Effect: Allow
+      Roles: [!Ref CloudFormationTrustRole]
+
+
   # TODO: least-priv this.
   # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
   CodePipelineServiceRole:
@@ -225,7 +282,7 @@ Resources:
           Configuration:
             StackName: !Sub "${AppName}-serverless-stack"
             ActionMode: CHANGE_SET_REPLACE
-            RoleArn: !Ref CodeBuildTrustRole
+            RoleArn: !Ref CloudFormationTrustRole
             ChangeSetName: pipeline-changeset
             Capabilities: CAPABILITY_NAMED_IAM
             TemplatePath: !Sub "${AppName}-BuildArtifact::post-saml.yml"
