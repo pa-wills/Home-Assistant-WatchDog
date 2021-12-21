@@ -12,24 +12,20 @@ The application comprises two stacks - one for the CICD apparatus, and the other
 
 ## How the pipeline works
 * Source stage is a simple replication of what's in the GitHub repo (make sure you're on the correct branch!).
-* BuildandDeploy stage comprises the usual sam commands, followed by a smoke test. Specifically: we build, we package, we deploy, and then we run a very basic smoke test: triggering the heartbeat API, then checking that the state is correctly set in the DyDB table.
+* Production stage comprises build, computation of the change set, execution of the change set, and lastly - a smoke test (triggering the heartbeat API, then checking that the state is correctly set in the DyDB table).
 
 ## How the app works
 * The app presents a basic API for recording heartbeats (see the console / CodeBuild for its URL). 
 * Once invoked - the app logs the datetime ([1st lambda](api/onHeartbeatFromHomeAssistant.py)).
 * EventBridge then triggers the [2nd lambda](api/onCheckHeartbeatRecency.py) to periodically check the last logged datetime, and notify me if the app has not heartbeat'd recently.
-* On the HomeAssistant side (not part of the repo), I have a AppDaemon daemon that invokes the API every _x_ minutes. I give the URL to HomeAssistant statically in the code at the moment (sloppy, I know), but helpfully - AppDaemon detects such changes and restarts automatically. 
+* On the HomeAssistant side (not part of the repo), I have an AppDaemon daemon that invokes the API every _x_ minutes. I give the URL to HomeAssistant statically in the code at the moment (sloppy, I know), but helpfully - AppDaemon detects such changes and restarts automatically. 
 
 ## Biggest todos
 Obviously see the Issues, but in general:
 * Authentication of client to API (or similar).
-* Additional notification channels noting the challenges with SMS.
-* Incorporation of CodeDeploy into the pipeline.
 * Least privilege, generally (the various IAM objects are needlessly permissive).
 * More robust ARN inference code, by which I mean: I have written code that goes and fetches the 0'th SNS topic, etc. This works for now, but won't once I build more applications. I need to sandbox those searches to within the app itself.
 * It would be nice to add more robust testing to the pipeline.
-* Parameter'ize the polling frequency.
-* Hide my phone number, etc.
 * Multi-environment (I.e. separate dev / prod).
 * Cleanup lambda - so that there's no need for manual activity.
 * Client-side API end-point auto-URL-discovery (or something else that would render the URL static).
