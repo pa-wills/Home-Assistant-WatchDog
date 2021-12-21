@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+# Annoyingly - updates to the params don't seem to trigger re-deployment of the associated Lambdas.
+# Re-running the pipeline from zero _does_ seem to work, though you'd hope such action was unnecessary.
+Parameters:
+  EnvironmentType:
+    Description: "Environment Type"
+    Default: "Prod"
+    Type: String
+    AllowedValues: ["Prod", "Test"]
+    ConstraintDescription: "Must specify either Prod or Test"
+  HeartbeatCheckPeriodParameter:
+    Description: "Number of mins that the Watchdog waits between checks for recent hearbeats (expressed as a rate expression)."
+    Type: String
+    Default: "rate(20 minutes)"
+  NotificationMessageStringParameter:
+    Description: "The notification string (regardless of how transported)."
+    Type: String
+    Default: "No recent heartbeat from Home Assistant."
+  NotificationFlatlinePeriodBeforeParameter:
+    Description: "Number of mins that the Watchdog waits before considering the host to be dead."
+    Type: Number
+    Default: 30
+  NotificationEmailEndpoint:
+    Type: String
+    Default: "nyer@foo.com"
+  NotificationSmsEndpoint:
+    Type: String
+    Default: "+61400000000"
+  
+# SNS bevahiour will change depending on EnvType. Everything else is the same either way.
+Conditions:
+  CreateProdResources: !Equals [!Ref EnvironmentType, Prod]
+  CreateTestResources: !Equals [!Ref EnvironmentType, Test]
+
+Resources:
+
+  # DynamoDB
+  HomeAssistantHeartBeatDyDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties: 
+      PrimaryKey:
+        Name: ID
+        Type: String
+      TableName: HomeAssistantHeartBeat
+
+  # EventBridge
+  scheduleCheckHeartbeat:
+    DependsOn: [onCheckHeartbeatRecency]
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'This is the trigger for the HB-checking lambda'
+      ScheduleExpression:
+        Ref: HeartbeatCheckPeriodParameter
+      State: ENABLED
+      Targets: 
+        -
+          Arn: !GetAtt onCheckHeartbeatRecency.Arn
+          Id: 1234IDeclareAEBWar
+
+
+  # Lambdas
+  onHeartbeatFromHomeAssistant:
+    Type: AWS::Serverless::Function
+    DependsOn: HeartbeatDatabaseAllAccessRole
+    Properties:
+      Handler: onHeartbeatFromHomeAssistant.lambda_handler
+      CodeUri: . 
+      Description: 'The hearbeat handler function'
+      MemorySize: 256
+      Timeout: 5
+      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Runtime: python3.9
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /heartbeat
+            Method: get
+
+  onCheckHeartbeatRecency:
+    Type: AWS::Serverless::Function
+    DependsOn: HeartbeatDatabaseAllAccessRole
+    Properties:
+      Handler: onCheckHeartbeatRecency.lambda_handler
+      CodeUri: . 
+      Description: 'The hearbeat time-checker handler function'
+      MemorySize: 256
+      Timeout: 5
+      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Runtime: python3.9
+      Environment:
+        Variables:
+          NOTIFICATION_MESSAGE: 
+            Ref: NotificationMessageStringParameter # Text of notification message.
+          NOTIFICATION_WAIT_MINS: 
+            Ref: NotificationFlatlinePeriodBeforeParameter # Number of mins to wait before.
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: "onCheckHeartbeatRecency"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "scheduleCheckHeartbeat"
+          - "Arn"
+
+  # Roles
+  HeartbeatDatabaseAllAccessRole:
+    Type:  AWS::IAM::Role
+    Properties:
+      RoleName: HeartbeatDatabaseAllAccess
+      Description: Allows Lambda functions to call AWS services on your behalf.
+      Path: /
+      # Unsure what this does?
+      # https://devops.stackexchange.com/questions/5094/what-is-the-purpose-of-assumerolepolicydocument-in-iam/5099
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SNSRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:*'
+                  - 'sns:*'
+                Resource: '*'
+  
+  # SNS
+  HeartbeatNotificationTopic:
+    Type:  AWS::SNS::Topic
+    Condition: CreateProdResources
+    Properties:
+      Subscription:
+        - Endpoint: 
+            Ref: NotificationSmsEndpoint
+          Protocol: "sms"
+  HeartbeatNotificationTopicTest:
+    Type:  AWS::SNS::Topic
+    Condition: CreateTestResources
+    Properties:
+      Subscription:
+        - Endpoint: 
+            Ref: NotificationEmailEndpoint
+          Protocol: "email"
+

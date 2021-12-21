@@ -1,0 +1,323 @@
+#
+#
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: This stack represents the pipeline for my HeartBeat API application.
+
+# Params are then entered directly into the GUI at stack-create/update time.
+Parameters:
+  AppName:
+    Type: String
+    Description: Name of the application.
+    MinLength: "1"
+    MaxLength: "80"
+    AllowedPattern: "[A-Za-z0-9-]+"
+    Default: HomeAssistantWatchDogPipeline
+    ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
+  GitHubRepoName:
+    Type: String
+    Description: "The GitHub repo name"
+    Default: Home-Assistant-WatchDog
+  GitHubRepoBranch:
+    Type: String
+    Description: "The GitHub repo branch code pipelines should watch for changes on."
+    Default: main
+  GitHubUser:
+    Type: String
+    Description: "GitHub UserName. This username must have access to the GitHubToken."
+    Default: pa-wills
+  GitHubToken:
+    NoEcho: true
+    Type: String
+    Description: "Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
+
+Resources:
+  # Build stage (first of two CodeBuild Objects).
+  CodeBuildProject:
+    DependsOn: [OutputBucket]
+    Description: This is the build sub-stage. Uses sam build / package to create .zips of the lambdas, etc.
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Description: !Sub "Build action for ${AppName}."
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: S3_BUCKET
+            Value: codepl-astore
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
+        Type: LINUX_CONTAINER
+      Name: !Sub "${AppName}-build"
+      ServiceRole: !GetAtt
+        - CodeBuildTrustRole
+        - Arn
+      Source:
+        BuildSpec: api/buildspec.yml
+        Type: CODEPIPELINE
+      Tags:
+        - Key: app-name
+          Value: !Ref AppName
+      TimeoutInMinutes: 5
+
+  # Build stage (first of two CodeBuild Objects).
+  CodeBuildProject2:
+    Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Description: !Sub "PVT action for ${AppName}."
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
+        Type: LINUX_CONTAINER
+      Name: !Sub "${AppName}-pvt"
+      ServiceRole: !GetAtt
+        - CodeBuildTrustRole
+        - Arn
+      Source:
+        BuildSpec: api/pvtspec.yml
+        Type: CODEPIPELINE
+      Tags:
+        - Key: app-name
+          Value: !Ref AppName
+      TimeoutInMinutes: 5
+
+
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: hawpl-codepl-astore
+
+  CodeBuildTrustRole:
+    Description: Creating service role in IAM for AWS CodeBuild
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-codebuild-role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [codebuild.amazonaws.com]
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${AppName}-CodeBuildRolePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+                Resource: ["*"]
+              - Effect: Allow
+                Action:
+                  - 'apigateway:*'
+                  - 'dynamodb:*'
+                  - 'events:*'
+                  - 'iam:*'
+                  - 'lambda:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                Resource: '*'
+
+  # The creating user needs to have IAM::PassRole in order to make this work.
+  CloudFormationTrustRole:
+    Description: Creating service role in IAM for AWS CloudFormation
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AppName}-cloudformation-role"
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [cloudformation.amazonaws.com]
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${AppName}-CloudFormationRolePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'apigateway:*'
+                  - 'dynamodb:*'
+                  - 'events:*'
+                  - 'iam:*'
+                  - 'lambda:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                Resource: '*'
+
+  # TODO: least-priv this.
+  # Adapted from: https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/cloudformation/codepipeline/template-codepipeline-github-events-yaml.yml
+  CodePipelineServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub "${AppName}-CodePipeline-Service-Role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codecommit:CancelUploadArchive'
+                  - 'codecommit:GetBranch'
+                  - 'codecommit:GetCommit'
+                  - 'codecommit:GetUploadArchiveStatus'
+                  - 'codecommit:UploadArchive'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'codedeploy:CreateDeployment'
+                  - 'codedeploy:GetApplicationRevision'
+                  - 'codedeploy:GetDeployment'
+                  - 'codedeploy:GetDeploymentConfig'
+                  - 'codedeploy:RegisterApplicationRevision'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'codebuild:BatchGetBuilds'
+                  - 'codebuild:StartBuild'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'devicefarm:ListProjects'
+                  - 'devicefarm:ListDevicePools'
+                  - 'devicefarm:GetRun'
+                  - 'devicefarm:GetUpload'
+                  - 'devicefarm:CreateUpload'
+                  - 'devicefarm:ScheduleRun'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:ListFunctions'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'elasticbeanstalk:*'
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                  - 'autoscaling:*'
+                  - 'cloudwatch:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                  - 'rds:*'
+                  - 'sqs:*'
+                  - 'ecs:*'
+                Resource: '*'
+
+  ProjectPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: [CodePipelineServiceRole, CodeBuildProject]
+    Description: The pipeline. Kind of the core of things, really.
+    Properties:
+      Name: !Sub "${AppName}-CodePipeline"
+      RoleArn: !GetAtt
+        - CodePipelineServiceRole
+        - Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref OutputBucket
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: source
+          InputArtifacts: []
+          ActionTypeId:
+            Version: "1"
+            Category: Source
+            Owner: ThirdParty
+            Provider: GitHub
+          OutputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          Configuration:
+            Repo: !Ref GitHubRepoName
+            Branch: !Ref GitHubRepoBranch
+            OAuthToken: !Ref GitHubToken
+            Owner: !Ref GitHubUser
+          RunOrder: 1
+      - Name: Production
+        Actions:
+        - Name: build-app
+          InputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          OutputArtifacts:
+          - Name: !Sub "${AppName}-BuildArtifact"
+          Configuration:
+            ProjectName: !Ref CodeBuildProject
+          RunOrder: 1
+        - Name: create-changeset
+          InputArtifacts:
+          - Name: !Sub "${AppName}-BuildArtifact"
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            StackName: HomeAssistantWatchDog
+            ActionMode: CHANGE_SET_REPLACE
+            RoleArn: !GetAtt 
+              - CloudFormationTrustRole
+              - Arn
+            ChangeSetName: pipeline-changeset
+            Capabilities: CAPABILITY_NAMED_IAM
+            TemplatePath: !Sub "${AppName}-BuildArtifact::api/packaged-template.yaml"
+#            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
+          RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
+        - Name: execute-changeset
+          InputArtifacts: []
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            StackName: HomeAssistantWatchDog
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: pipeline-changeset
+          RunOrder: 3 
+        - Name: pvt
+          InputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName: !Ref CodeBuildProject2
+          RunOrder: 4
+
+
+
