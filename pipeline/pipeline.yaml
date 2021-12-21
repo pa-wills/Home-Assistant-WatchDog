@@ -33,7 +33,7 @@ Parameters:
 
 Resources:
   # Build stage (first of two CodeBuild Objects).
-  CodeBuildProject1:
+  CodeBuildProject:
     DependsOn: [OutputBucket]
     Description: This is the build sub-stage. Uses sam build / package to create .zips of the lambdas, etc.
     Type: AWS::CodeBuild::Project
@@ -61,7 +61,7 @@ Resources:
       TimeoutInMinutes: 5
 
   # Build stage (first of two CodeBuild Objects).
-  CodeBuildProject1:
+  CodeBuildProject2:
     Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
     Type: AWS::CodeBuild::Project
     Properties:
@@ -306,6 +306,18 @@ Resources:
             ActionMode: CHANGE_SET_EXECUTE
             ChangeSetName: pipeline-changeset
           RunOrder: 3 
+        - Name: pvt
+          InputArtifacts:
+          - Name: !Sub "${AppName}-SourceArtifact"
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName: !Ref CodeBuildProject2
+          RunOrder: 4
 
 
 
