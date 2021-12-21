@@ -6,9 +6,9 @@ While this app has some stand-alone utilty - its existence mainly derives from m
 Also, while HomeAssistant is the motivating problem, this Watchdog could be extended to any component that's capable of invoking a REST API.
 
 ## Contents / Setup
-The application comprises two stacks - one for the CICD apparatus, and the other for the app itself.
-* [pipeline.yaml](pipeline/pipeline.yaml) defines the CICD apparatus. To get it working, simply instantiate the stack in CloudFormation. Note - you may need to empty and then delete the S3 bucket beforehand - I haven't got this working cleanly. You will also need to authorise the stack to talk to this GitHub repo (go get an OAuth token).
-* The application itself should then build and deploy from the deployed CodePipeline instance. It comprises two lambdas, a DyDB table (for state), a SNS topic (for alerting), and some IAM objects.
+The project comprises two stacks - one for the CI/CD apparatus, and the other for the app itself.
+* [pipeline.yaml](pipeline/pipeline.yaml) defines the CI/CD apparatus, which is a distinct stack. To get it working, simply instantiate the template with CloudFormation. Note - you may need to empty and then delete the S3 bucket, prior to running Create, assuming that it exists already (Updates seem to be unaffected / fine). You will also need to authorise the stack to talk to this GitHub repo (go get an OAuth token).
+* The application itself is a separate stack, and it should instantiate automatically from the CodePipeline object in the other Stack. It comprises two lambdas, a DyDB table (for state), a SNS topic (for alerting), and some IAM objects.
 
 ## How the pipeline works
 * Source stage is a simple replication of what's in the GitHub repo (make sure you're on the correct branch!).
@@ -19,6 +19,7 @@ The application comprises two stacks - one for the CICD apparatus, and the other
 * Once invoked - the app logs the datetime ([1st lambda](api/onHeartbeatFromHomeAssistant.py)).
 * EventBridge then triggers the [2nd lambda](api/onCheckHeartbeatRecency.py) to periodically check the last logged datetime, and notify me if the app has not heartbeat'd recently.
 * On the HomeAssistant side (not part of the repo), I have an AppDaemon daemon that invokes the API every _x_ minutes. I give the URL to HomeAssistant statically in the code at the moment (sloppy, I know), but helpfully - AppDaemon detects such changes and restarts automatically. 
+* The various waiting periods and notification endpoints - are parameterised into Environment Variables, EventBridge settings. My hope here is that these can thus be modified at runtime (I.e. without the need for a deployment).
 
 ## Biggest todos
 Obviously see the Issues, but in general:
@@ -27,7 +28,7 @@ Obviously see the Issues, but in general:
 * More robust ARN inference code, by which I mean: I have written code that goes and fetches the 0'th SNS topic, etc. This works for now, but won't once I build more applications. I need to sandbox those searches to within the app itself.
 * It would be nice to add more robust testing to the pipeline.
 * Multi-environment (I.e. separate dev / prod).
-* Cleanup lambda - so that there's no need for manual activity.
+* Cleanup lambda - so that there's no need for manual activity (see above).
 * Client-side API end-point auto-URL-discovery (or something else that would render the URL static).
 
 ## Things I found difficult / helpful
