@@ -3,12 +3,18 @@ version: 0.2 # Turns out this matters - https://docs.aws.amazon.com/codebuild/la
 # Phase definitions: https://aws.amazon.com/blogs/apn/an-introduction-to-aws-codebuild/
 
 phases:
+  install:
+    runtime-versions:
+      python: 3.9
   build:
     commands:
       - cd api
       - sam build
       - sam package --template-file template.yaml --s3-bucket hawpl-codepl-astore --output-template-file packaged-template.yaml --force-upload
 #      - sam deploy --stack-name HomeAssistantWatchDog --s3-bucket hawpl-codepl-astore --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+# Leaving the deploy step here and commented out. May be useful for building test stacks on other branches, etc.
+
 artifacts:
   files:
     - "**/*"
