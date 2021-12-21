@@ -14,6 +14,8 @@ The project comprises two stacks - one for the CI/CD apparatus, and the other fo
 * Source stage is a simple replication of what's in the GitHub repo (make sure you're on the correct branch!).
 * Production stage comprises build, computation of the change set, execution of the change set, and lastly - a smoke test (triggering the heartbeat API, then checking that the state is correctly set in the DyDB table).
 
+![screenshot](https://user-images.githubusercontent.com/34256848/146853028-367306b9-0417-48ea-b9ec-97b22a061f38.png)
+
 ## How the app works
 * The app presents a basic API for recording heartbeats (see the console / CodeBuild for its URL). 
 * Once invoked - the app logs the datetime ([1st lambda](api/onHeartbeatFromHomeAssistant.py)).
