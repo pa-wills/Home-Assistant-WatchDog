@@ -28,9 +28,11 @@ Do the following:
 * Create a new branch (E.g. dev)
 * Create / change the software as you see fit.
 * Create the stack using the usual [sam](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-reference.html#serverless-sam-cli) commands:
+
 	sam build
 	sam package --s3-bucket hawpl-codepl-astore
 	sam deploy --s3-bucket hawpl-codepl-astore --stack-name test --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM --parameter-overrides EnvironmentType=Dev
+
 * In the above ensure that:
 	* Give the stack a disctinct name, like "test"
 	* set the Environment Variable _EnvironmentType_ to "Dev". This drives some conditional resource creation, and some distinct resource naming.
