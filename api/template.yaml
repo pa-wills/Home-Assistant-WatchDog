@@ -63,14 +63,14 @@ Resources:
   # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
-    DependsOn: HeartbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatLambdaRole
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat handler function'
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatLambdaRole.Arn
       Runtime: python3.9
       Events:
         GetResource:
@@ -81,14 +81,14 @@ Resources:
 
   onCheckHeartbeatRecency:
     Type: AWS::Serverless::Function
-    DependsOn: HeartbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatLambdaRole
     Properties:
       Handler: onCheckHeartbeatRecency.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat time-checker handler function'
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatLambdaRole.Arn
       Runtime: python3.9
       Environment:
         Variables:
@@ -110,10 +110,11 @@ Resources:
           - "Arn"
 
   # Roles
-  HeartbeatDatabaseAllAccessRole:
+  HeartbeatLambdaRole:
     Type:  AWS::IAM::Role
+    DependsOn: HomeAssistantHeartBeatDyDB
     Properties:
-      RoleName: HeartbeatDatabaseAllAccess
+      RoleName: HeartbeatLambdaRole
       Description: Allows Lambda functions to call AWS services on your behalf.
       Path: /
       # Unsure what this does?
@@ -126,15 +127,23 @@ Resources:
               Service: [lambda.amazonaws.com]
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: SNSRolePolicy
+        - PolicyName: HeartbeatLambdaRolePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - 'dynamodb:*'
                   - 'sns:*'
                 Resource: '*'
+                  # Needs to be wrapped in an if / then.
+                  #- !GetAtt HeartbeatNotificationTopic.Arn
+                  #- !GetAtt HeartbeatNotificationTopicTest.Arn
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                Resource:
+                  - !GetAtt HomeAssistantHeartBeatDyDB.Arn
   
   # SNS
   HeartbeatNotificationTopic:
