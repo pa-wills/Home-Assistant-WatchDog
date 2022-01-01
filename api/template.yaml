@@ -68,7 +68,6 @@ Resources:
           Arn: !GetAtt onCheckHeartbeatRecency.Arn
           Id: 1234IDeclareAEBWar
 
-
   # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
@@ -156,7 +155,7 @@ Resources:
                 Action:
                   - 'sns:*'
                 Resource: '*'
-                  # Needs to be wrapped in an if / then.
+                  # TODO: Needs to be wrapped in an if / then.
                   #- !GetAtt HeartbeatNotificationTopic.Arn
                   #- !GetAtt HeartbeatNotificationTopicTest.Arn
               - Effect: Allow

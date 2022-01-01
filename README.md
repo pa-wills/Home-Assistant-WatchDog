@@ -23,6 +23,7 @@ The project comprises two stacks - one for the CI/CD apparatus, and the other fo
 * On the HomeAssistant side (not part of the repo), I have an AppDaemon daemon that invokes the API every _x_ minutes. I give the URL to HomeAssistant statically in the code at the moment (sloppy, I know), but helpfully - AppDaemon detects such changes and restarts automatically. 
 * The various waiting periods and notification endpoints - are parameterised into Environment Variables, EventBridge settings. My hope here is that these can thus be modified at runtime (I.e. without the need for a deployment).
 
+
 ## Development off the main branch
 Do the following:
 * Create a new branch (E.g. dev)

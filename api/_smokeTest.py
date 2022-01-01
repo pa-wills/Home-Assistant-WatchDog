@@ -18,7 +18,7 @@ try:
 	print("Endpoint URL: " + urlHeartbeat)
 	r = requests.get(urlHeartbeat)
 	dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
-    tableName = str(os.environ.get('APP_NAME')) + "-" + str(os.environ.get('ENV_NAME')) + "-HeartBeatState"
+  tableName = str(os.environ.get('APP_NAME')) + "-" + str(os.environ.get('ENV_NAME')) + "-HeartBeatState"
 	table = dynamodb.Table(tableName)
 	response = table.get_item(
 		Key = {'ID': '8Faraday'}
