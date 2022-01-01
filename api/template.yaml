@@ -4,12 +4,20 @@ Transform: 'AWS::Serverless-2016-10-31'
 # Annoyingly - updates to the params don't seem to trigger re-deployment of the associated Lambdas.
 # Re-running the pipeline from zero _does_ seem to work, though you'd hope such action was unnecessary.
 Parameters:
+  AppName:
+    Type: String
+    Description: Name of the application.
+    MinLength: "1"
+    MaxLength: "80"
+    AllowedPattern: "[A-Za-z0-9-]+"
+    Default: HomeAssistantWatchDog
+    ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
   EnvironmentType:
     Description: "Environment Type"
     Default: "Prod"
     Type: String
-    AllowedValues: ["Prod", "Test"]
-    ConstraintDescription: "Must specify either Prod or Test"
+    AllowedValues: ["Prod", "Test", "Dev"]
+    ConstraintDescription: "Must specify either Prod, Test or Dev"
   HeartbeatCheckPeriodParameter:
     Description: "Number of mins that the Watchdog waits between checks for recent hearbeats (expressed as a rate expression)."
     Type: String
@@ -32,7 +40,7 @@ Parameters:
 # SNS bevahiour will change depending on EnvType. Everything else is the same either way.
 Conditions:
   CreateProdResources: !Equals [!Ref EnvironmentType, Prod]
-  CreateTestResources: !Equals [!Ref EnvironmentType, Test]
+  CreateTestResources: !Or [!Equals [!Ref EnvironmentType, Test], !Equals [!Ref EnvironmentType, Dev]]
 
 Resources:
 
@@ -43,7 +51,7 @@ Resources:
       PrimaryKey:
         Name: ID
         Type: String
-      TableName: HomeAssistantHeartBeat
+      TableName: !Sub "${AppName}-${EnvironmentType}-HeartBeatState"
 
   # EventBridge
   scheduleCheckHeartbeat:
@@ -51,6 +59,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: 'This is the trigger for the HB-checking lambda'
+      Name: !Sub "${AppName}-${EnvironmentType}-CheckHeartBeat"
       ScheduleExpression:
         Ref: HeartbeatCheckPeriodParameter
       State: ENABLED
@@ -59,19 +68,25 @@ Resources:
           Arn: !GetAtt onCheckHeartbeatRecency.Arn
           Id: 1234IDeclareAEBWar
 
-
   # Lambdas
   onHeartbeatFromHomeAssistant:
     Type: AWS::Serverless::Function
-    DependsOn: HeartbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatLambdaRole
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat handler function'
+      FunctionName: !Sub "${AppName}-${EnvironmentType}-onHeartbeatFromHomeAssistant"
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatLambdaRole.Arn
       Runtime: python3.9
+      Environment:
+        Variables:
+          APP_NAME:
+            Ref: AppName
+          ENV_NAME: 
+            Ref: EnvironmentType
       Events:
         GetResource:
           Type: Api
@@ -81,17 +96,22 @@ Resources:
 
   onCheckHeartbeatRecency:
     Type: AWS::Serverless::Function
-    DependsOn: HeartbeatDatabaseAllAccessRole
+    DependsOn: HeartbeatLambdaRole
     Properties:
       Handler: onCheckHeartbeatRecency.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat time-checker handler function'
+      FunctionName: !Sub "${AppName}-${EnvironmentType}-onCheckHeartbeatRecency"
       MemorySize: 256
       Timeout: 5
-      Role: !GetAtt HeartbeatDatabaseAllAccessRole.Arn
+      Role: !GetAtt HeartbeatLambdaRole.Arn
       Runtime: python3.9
       Environment:
         Variables:
+          APP_NAME:
+            Ref: AppName
+          ENV_NAME: 
+            Ref: EnvironmentType
           NOTIFICATION_MESSAGE: 
             Ref: NotificationMessageStringParameter # Text of notification message.
           NOTIFICATION_WAIT_MINS: 
@@ -110,10 +130,11 @@ Resources:
           - "Arn"
 
   # Roles
-  HeartbeatDatabaseAllAccessRole:
+  HeartbeatLambdaRole:
     Type:  AWS::IAM::Role
+#    DependsOn: HomeAssistantHeartBeatDyDB
     Properties:
-      RoleName: HeartbeatDatabaseAllAccess
+      RoleName: !Sub "${AppName}-${EnvironmentType}-HeartbeatLambdaRole"
       Description: Allows Lambda functions to call AWS services on your behalf.
       Path: /
       # Unsure what this does?
@@ -126,15 +147,23 @@ Resources:
               Service: [lambda.amazonaws.com]
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: SNSRolePolicy
+        - PolicyName: !Sub "${AppName}-${EnvironmentType}-HeartbeatLambdaRolePolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - 'dynamodb:*'
                   - 'sns:*'
                 Resource: '*'
+                  # TODO: Needs to be wrapped in an if / then.
+                  #- !GetAtt HeartbeatNotificationTopic.Arn
+                  #- !GetAtt HeartbeatNotificationTopicTest.Arn
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                Resource:
+                  - !GetAtt HomeAssistantHeartBeatDyDB.Arn
   
   # SNS
   HeartbeatNotificationTopic:
@@ -145,6 +174,7 @@ Resources:
         - Endpoint: 
             Ref: NotificationSmsEndpoint
           Protocol: "sms"
+      TopicName: !Sub "${AppName}-${EnvironmentType}-HeartbeatNotificationTopic"
   HeartbeatNotificationTopicTest:
     Type:  AWS::SNS::Topic
     Condition: CreateTestResources
@@ -153,4 +183,5 @@ Resources:
         - Endpoint: 
             Ref: NotificationEmailEndpoint
           Protocol: "email"
+      TopicName: !Sub "${AppName}-${EnvironmentType}-HeartbeatNotificationTopic"
 

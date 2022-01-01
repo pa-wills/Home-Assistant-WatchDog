@@ -14,6 +14,12 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]+"
     Default: HomeAssistantWatchDogPipeline
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
+  EnvironmentType:
+    Description: "Environment Type"
+    Default: "Prod"
+    Type: String
+    AllowedValues: ["Prod", "Test", "Dev"]
+    ConstraintDescription: "Must specify either Prod, Test or Dev"
   GitHubRepoName:
     Type: String
     Description: "The GitHub repo name"
@@ -32,7 +38,7 @@ Parameters:
     Description: "Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
 
 Resources:
-  # Build stage (first of two CodeBuild Objects).
+  # Build sub-stage (first of two CodeBuild Objects).
   CodeBuildProject:
     DependsOn: [OutputBucket]
     Description: This is the build sub-stage. Uses sam build / package to create .zips of the lambdas, etc.
@@ -60,7 +66,7 @@ Resources:
           Value: !Ref AppName
       TimeoutInMinutes: 5
 
-  # Build stage (first of two CodeBuild Objects).
+  # PVT sub-stage (second of two CodeBuild Objects).
   CodeBuildProject2:
     Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
     Type: AWS::CodeBuild::Project
@@ -70,6 +76,11 @@ Resources:
       Description: !Sub "PVT action for ${AppName}."
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: APP_NAME
+            Value: !Ref AppName
+          - Name: ENV_NAME
+            Value: !Ref EnvironmentType
         Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-pvt"
@@ -83,7 +94,6 @@ Resources:
         - Key: app-name
           Value: !Ref AppName
       TimeoutInMinutes: 5
-
 
   OutputBucket:
     Type: AWS::S3::Bucket
@@ -176,33 +186,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'codecommit:CancelUploadArchive'
-                  - 'codecommit:GetBranch'
-                  - 'codecommit:GetCommit'
-                  - 'codecommit:GetUploadArchiveStatus'
-                  - 'codecommit:UploadArchive'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'codedeploy:CreateDeployment'
-                  - 'codedeploy:GetApplicationRevision'
-                  - 'codedeploy:GetDeployment'
-                  - 'codedeploy:GetDeploymentConfig'
-                  - 'codedeploy:RegisterApplicationRevision'
-                Resource: '*'
-              - Effect: Allow
-                Action:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'devicefarm:ListProjects'
-                  - 'devicefarm:ListDevicePools'
-                  - 'devicefarm:GetRun'
-                  - 'devicefarm:GetUpload'
-                  - 'devicefarm:CreateUpload'
-                  - 'devicefarm:ScheduleRun'
                 Resource: '*'
               - Effect: Allow
                 Action:
@@ -318,6 +303,3 @@ Resources:
           Configuration:
             ProjectName: !Ref CodeBuildProject2
           RunOrder: 4
-
-
-

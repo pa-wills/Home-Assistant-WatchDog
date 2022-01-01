@@ -9,12 +9,13 @@ def lambda_handler(event, context):
     notificationThresoldDurationSecs = int(os.environ.get('NOTIFICATION_WAIT_MINS')) * 60
 
     client = boto3.client("sns")
-    arnTopic = (client.list_topics())["Topics"][0]["TopicArn"] # Hacky as.
+    arnTopic = client.create_topic(Name = (str(os.environ.get('APP_NAME')) + "-" + str(os.environ.get('ENV_NAME')) + "-HeartbeatNotificationTopic"))["TopicArn"]
 
     # Compute duration since last poll.
     now = datetime.datetime.now()
-    dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
-    table = dynamodb.Table("HomeAssistantHeartBeat")
+    tableName = str(os.environ.get('APP_NAME')) + "-" + str(os.environ.get('ENV_NAME')) + "-HeartBeatState"
+    dynamodb = boto3.resource('dynamodb', region_name = "ap-southeast-2")
+    table = dynamodb.Table(tableName)
     response = table.get_item(
         Key = {'ID': '8Faraday'}
     )

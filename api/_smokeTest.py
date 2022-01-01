@@ -1,6 +1,7 @@
 
 import boto3
 import datetime
+import os
 import requests
 import sys
 
@@ -17,7 +18,8 @@ try:
 	print("Endpoint URL: " + urlHeartbeat)
 	r = requests.get(urlHeartbeat)
 	dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
-	table = dynamodb.Table("HomeAssistantHeartBeat")
+	tableName = str(os.environ.get('APP_NAME')) + "-" + str(os.environ.get('ENV_NAME')) + "-HeartBeatState"
+	table = dynamodb.Table(tableName)
 	response = table.get_item(
 		Key = {'ID': '8Faraday'}
 	)
@@ -27,7 +29,6 @@ try:
 	if (deltaSecs > 5): 
 		raise Exception("Heartbeat datetime not reflected in DB.")
 	print("TC #01: Passed.")
-
 except:
 	print("TC #01: Failed.")
 	sys.exit(-1)
