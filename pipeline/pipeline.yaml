@@ -20,7 +20,7 @@ Parameters:
     Type: String
     AllowedValues: ["Prod", "Test", "Dev"]
     ConstraintDescription: "Must specify either Prod, Test or Dev"
-  GitHubRepoName:
+  GitHubFullRepoID:
     Type: String
     Description: "The GitHub repo name"
     Default: Home-Assistant-WatchDog
@@ -28,25 +28,111 @@ Parameters:
     Type: String
     Description: "The GitHub repo branch code pipelines should watch for changes on."
     Default: main
-  GitHubUser:
+  CodeStarSourceConnectionArn:
     Type: String
-    Description: "GitHub UserName. This username must have access to the GitHubToken."
-    Default: pa-wills
-  GitHubToken:
-    NoEcho: true
-    Type: String
-    Description: "Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
+    Description: "The ARN of the existing connection back into Github."
+    Default: "arn:aws:codestar-connections:ap-southeast-2:623056247312:connection/e23152ba-62a3-4321-93a5-314cf6858b87"  
 
 Resources:
+
+  ProjectPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: [CodePipelineServiceRole, CodeBuildProject]
+    Description: The pipeline. Kind of the core of things, really.
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineOutputBucket
+      RoleArn: !GetAtt
+        - CodePipelineServiceRole
+        - Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: source
+          InputArtifacts: []
+          ActionTypeId:
+            Version: "1"
+            Category: Source
+            Owner: AWS
+            Provider: CodeStarSourceConnection
+          OutputArtifacts:
+          - Name: "SourceArtifact"
+          Configuration:
+            ConnectionArn: !Ref CodeStarSourceConnectionArn
+            FullRepositoryId: !Ref GitHubFullRepoID
+            BranchName: !Ref GitHubRepoBranch
+            OutputArtifactFormat: "CODE_ZIP"
+          RunOrder: 1
+      - Name: Production
+        Actions:
+        - Name: build-app
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          Configuration:
+            ProjectName: !Ref CodeBuildProject
+          InputArtifacts:
+          - Name: "SourceArtifact"
+          OutputArtifacts:
+          - Name: "BuildArtifact"
+          RunOrder: 1
+        - Name: create-changeset
+          InputArtifacts:
+          - Name: "BuildArtifact"
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          OutputArtifacts: []
+          Configuration:
+            ActionMode: CHANGE_SET_REPLACE
+            Capabilities: CAPABILITY_NAMED_IAM
+            ChangeSetName: pipeline-changeset-prod
+            RoleArn: !GetAtt 
+              - CloudFormationTrustRole
+              - Arn
+            StackName: HomeAssistantWatchDog-Prod
+            TemplatePath: !Sub "${AppName}-BuildArtifact::api/packaged-template.yaml"
+#            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
+          RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
+        - Name: execute-changeset
+          InputArtifacts: []
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          Configuration:
+            StackName: HomeAssistantWatchDog-Prod
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: pipeline-changeset-prod
+          OutputArtifacts: []
+          RunOrder: 3 
+        - Name: pvt
+          InputArtifacts:
+          - Name: "SourceArtifact"
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: "1"
+            Provider: CodeBuild
+          OutputArtifacts: []
+          Configuration:
+            ProjectName: !Ref CodeBuildProject2
+          RunOrder: 4
+
   # Build sub-stage (first of two CodeBuild Objects).
   CodeBuildProject:
-    DependsOn: [OutputBucket]
     Description: This is the build sub-stage. Uses sam build / package to create .zips of the lambdas, etc.
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
         Type: CODEPIPELINE
-      Description: !Sub "Build action for ${AppName}."
+      Description: "Build action."
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
@@ -95,11 +181,86 @@ Resources:
           Value: !Ref AppName
       TimeoutInMinutes: 5
 
-  OutputBucket:
+  PipelineOutputBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
     Properties:
-      BucketName: hawpl-codepl-astore
+      LifecycleConfiguration:
+        Rules:
+          - Id: GlacierRule
+            Status: Enabled
+            ExpirationInDays: 90
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: GLACIER
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  PipelineOutputBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:  
+      Bucket: !Ref PipelineOutputBucket
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action: ["s3:*"]
+          Resource:
+          - !Sub "arn:aws:s3:::${PipelineOutputBucket}"
+          - !Sub "arn:aws:s3:::${PipelineOutputBucket}/*"
+          Principal:
+            AWS:
+            - !GetAtt CodePipelineServiceRole.Arn
+            - !Sub "arn:aws:iam::494507141278:role/cross-account-role-devtest" # TODO: parameterise for portability.
+            - !Sub "arn:aws:iam::494507141278:role/cf-execution-role-devtest" # TODO: parameterise for portability.
+            - !Sub "arn:aws:iam::732786819153:role/cross-account-role-prod" # TODO: parameterise for portability.
+            - !Sub "arn:aws:iam::732786819153:role/cf-execution-role-prod" # TODO: parameterise for portability.
+
+  # TODO: I am probably going to have multiple pipelines, and I don't want one Key for each.
+  # So, perhaps break this out into a shared services stack w/in this CICD account.
+  PipelineEncryptionKey:
+    DeletionPolicy: Retain
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key for SSE-KMS on the Pipeline Bucket.
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: keyForPipelineArtifactEncryption
+        Statement:
+          - Sid: "Allow access through S3 for all principals in accounts needing to use the bucket."
+            Principal: 
+              AWS: "*"
+            Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource:
+              - "*"
+            #Condition:
+              # TODO: where caller accounts, and Via service???
+          - Sid: "Allow administration of the key."
+            Principal: 
+              AWS: [
+                "arn:aws:iam::623056247312:root", 
+                "arn:aws:iam::623056247312:role/aws-reserved/sso.amazonaws.com/ap-southeast-2/AWSReservedSSO_AWSAdministratorAccess_40a020b2fd86f86c"
+              ]
+              # TODO: use intrinsic function to get the account id.
+            Effect: Allow
+            Action:
+              - kms:*
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
 
   CodeBuildTrustRole:
     Description: Creating service role in IAM for AWS CodeBuild
@@ -191,6 +352,10 @@ Resources:
                 Resource: '*'
               - Effect: Allow
                 Action:
+                  - 'codestar-connections:UseConnection'
+                Resource: '*'
+              - Effect: Allow
+                Action:
                   - 'lambda:InvokeFunction'
                   - 'lambda:ListFunctions'
                 Resource: '*'
@@ -213,93 +378,4 @@ Resources:
                   - 'ecs:*'
                 Resource: '*'
 
-  ProjectPipeline:
-    Type: AWS::CodePipeline::Pipeline
-    DependsOn: [CodePipelineServiceRole, CodeBuildProject]
-    Description: The pipeline. Kind of the core of things, really.
-    Properties:
-      Name: !Sub "${AppName}-CodePipeline"
-      RoleArn: !GetAtt
-        - CodePipelineServiceRole
-        - Arn
-      ArtifactStore:
-        Type: S3
-        Location: !Ref OutputBucket
-      Stages:
-      - Name: Source
-        Actions:
-        - Name: source
-          InputArtifacts: []
-          ActionTypeId:
-            Version: "1"
-            Category: Source
-            Owner: ThirdParty
-            Provider: GitHub
-          OutputArtifacts:
-          - Name: !Sub "${AppName}-SourceArtifact"
-          Configuration:
-            Repo: !Ref GitHubRepoName
-            Branch: !Ref GitHubRepoBranch
-            OAuthToken: !Ref GitHubToken
-            Owner: !Ref GitHubUser
-          RunOrder: 1
-      - Name: Production
-        Actions:
-        - Name: build-app
-          InputArtifacts:
-          - Name: !Sub "${AppName}-SourceArtifact"
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: "1"
-            Provider: CodeBuild
-          OutputArtifacts:
-          - Name: !Sub "${AppName}-BuildArtifact"
-          Configuration:
-            ProjectName: !Ref CodeBuildProject
-          RunOrder: 1
-        - Name: create-changeset
-          InputArtifacts:
-          - Name: !Sub "${AppName}-BuildArtifact"
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: "1"
-            Provider: CloudFormation
-          OutputArtifacts: []
-          Configuration:
-            StackName: HomeAssistantWatchDog
-            ActionMode: CHANGE_SET_REPLACE
-            RoleArn: !GetAtt 
-              - CloudFormationTrustRole
-              - Arn
-            ChangeSetName: pipeline-changeset
-            Capabilities: CAPABILITY_NAMED_IAM
-            TemplatePath: !Sub "${AppName}-BuildArtifact::api/packaged-template.yaml"
-#            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
-          RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
-        - Name: execute-changeset
-          InputArtifacts: []
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: "1"
-            Provider: CloudFormation
-          OutputArtifacts: []
-          Configuration:
-            StackName: HomeAssistantWatchDog
-            ActionMode: CHANGE_SET_EXECUTE
-            ChangeSetName: pipeline-changeset
-          RunOrder: 3 
-        - Name: pvt
-          InputArtifacts:
-          - Name: !Sub "${AppName}-SourceArtifact"
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: "1"
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName: !Ref CodeBuildProject2
-          RunOrder: 4
+
