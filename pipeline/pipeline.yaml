@@ -23,11 +23,11 @@ Parameters:
   GitHubFullRepoID:
     Type: String
     Description: "The GitHub repo name"
-    Default: Home-Assistant-WatchDog
+    Default: pa-wills/Home-Assistant-WatchDog
   GitHubRepoBranch:
     Type: String
     Description: "The GitHub repo branch code pipelines should watch for changes on."
-    Default: main
+    Default: dev
   CodeStarSourceConnectionArn:
     Type: String
     Description: "The ARN of the existing connection back into Github."
@@ -137,7 +137,7 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
           - Name: S3_BUCKET
-            Value: codepl-astore
+            Value: !Ref PipelineOutputBucket
         Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-build"
@@ -152,6 +152,7 @@ Resources:
           Value: !Ref AppName
       TimeoutInMinutes: 5
 
+  # TODO: just use a Lambda. Codebuild is overkill.
   # PVT sub-stage (second of two CodeBuild Objects).
   CodeBuildProject2:
     Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
