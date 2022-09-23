@@ -51,7 +51,6 @@ Resources:
       PrimaryKey:
         Name: ID
         Type: String
-      TableName: !Sub "${AppName}-${EnvironmentType}-HeartBeatState"
 
   # EventBridge
   scheduleCheckHeartbeat:
@@ -59,7 +58,6 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: 'This is the trigger for the HB-checking lambda'
-      Name: !Sub "${AppName}-${EnvironmentType}-CheckHeartBeat"
       ScheduleExpression:
         Ref: HeartbeatCheckPeriodParameter
       State: ENABLED
@@ -76,7 +74,6 @@ Resources:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat handler function'
-      FunctionName: !Sub "${AppName}-${EnvironmentType}-onHeartbeatFromHomeAssistant"
       MemorySize: 256
       Timeout: 5
       Role: !GetAtt HeartbeatLambdaRole.Arn
@@ -101,7 +98,6 @@ Resources:
       Handler: onCheckHeartbeatRecency.lambda_handler
       CodeUri: . 
       Description: 'The hearbeat time-checker handler function'
-      FunctionName: !Sub "${AppName}-${EnvironmentType}-onCheckHeartbeatRecency"
       MemorySize: 256
       Timeout: 5
       Role: !GetAtt HeartbeatLambdaRole.Arn

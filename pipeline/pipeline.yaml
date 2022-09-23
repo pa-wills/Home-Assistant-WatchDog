@@ -101,7 +101,7 @@ Resources:
           OutputArtifacts: []
           Configuration:
             ActionMode: CREATE_UPDATE
-            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND # if you need two, this syntax is important. Trial / error. Took 2 hours...
             ChangeSetName: pipeline-changeset-prod
             RoleArn: !Ref ProductionCfnRoleArn
             StackName: HomeAssistantWatchDog-Prod
@@ -163,8 +163,6 @@ Resources:
         EnvironmentVariables:
           - Name: APP_NAME
             Value: !Ref AppName
-          - Name: ENV_NAME
-            Value: !Ref EnvironmentType
         Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
         Type: LINUX_CONTAINER
       Name: !Sub "${AppName}-pvt"
@@ -336,7 +334,7 @@ Resources:
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy2"
+        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
