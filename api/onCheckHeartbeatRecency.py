@@ -27,7 +27,7 @@ def lambda_handler(event, context):
     notify = False
     if (deltaSecs > notificationThresoldDurationSecs):
         notify = True
-        client.publish(TopicArn = arnTopic, Message = str(os.environ.get('NOTIFICATION_MESSAGE')))
+        client.publish(TopicArn = (str(os.environ.get('TOPIC_ARN'))), Message = str(os.environ.get('NOTIFICATION_MESSAGE')))
     
     return {
         # TODO: clean up.
