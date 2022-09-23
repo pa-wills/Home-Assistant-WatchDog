@@ -14,12 +14,6 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]+"
     Default: HomeAssistantWatchDogPipeline
     ConstraintDescription: Malformed input parameter. AppName must only contain upper and lower case letters, numbers, and -.
-  EnvironmentType:
-    Description: "Environment Type"
-    Default: "Prod"
-    Type: String
-    AllowedValues: ["Prod", "Test", "Dev"]
-    ConstraintDescription: "Must specify either Prod, Test or Dev"
   GitHubFullRepoID:
     Type: String
     Description: "The GitHub repo name"
@@ -109,18 +103,6 @@ Resources:
 #            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
           RoleArn: !Ref ProductionCodePipelineRoleArn
           RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
-        - Name: pvt
-          InputArtifacts:
-          - Name: "SourceArtifact"
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: "1"
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName: !Ref CodeBuildProject2
-          RunOrder: 3
 
   # Build sub-stage (first of two CodeBuild Objects).
   CodeBuildProject:
@@ -143,34 +125,6 @@ Resources:
         - Arn
       Source:
         BuildSpec: api/buildspec.yml
-        Type: CODEPIPELINE
-      Tags:
-        - Key: app-name
-          Value: !Ref AppName
-      TimeoutInMinutes: 5
-
-  # TODO: just use a Lambda. Codebuild is overkill.
-  # PVT sub-stage (second of two CodeBuild Objects).
-  CodeBuildProject2:
-    Description: This is the PVT sub-stage. Invokes my smoke tester, and that's it.
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Artifacts:
-        Type: CODEPIPELINE
-      Description: !Sub "PVT action for ${AppName}."
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        EnvironmentVariables:
-          - Name: APP_NAME
-            Value: !Ref AppName
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0 # Using a modern image, matters. Got stuck on this for ages.
-        Type: LINUX_CONTAINER
-      Name: !Sub "${AppName}-pvt"
-      ServiceRole: !GetAtt
-        - CodeBuildTrustRole
-        - Arn
-      Source:
-        BuildSpec: api/pvtspec.yml
         Type: CODEPIPELINE
       Tags:
         - Key: app-name
