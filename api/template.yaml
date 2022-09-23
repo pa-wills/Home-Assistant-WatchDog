@@ -36,6 +36,10 @@ Parameters:
   NotificationSmsEndpoint:
     Type: String
     Default: "+61400000000"
+  ProductionCertArn:
+    Type: String
+    Description: "The ARN of the ACM Certificate that secures the custom domain."
+    Default: "arn:aws:acm:us-east-1:732786819153:certificate/bc66619f-dce3-4f61-bdca-818d44e78894"
   
 # SNS bevahiour will change depending on EnvType. Everything else is the same either way.
 Conditions:
@@ -125,11 +129,19 @@ Resources:
       StageName: prod
 
   ApiGatewayDomainName:
-    Type: 'AWS::ApiGateway::DomainName'
+    Type: AWS::ApiGateway::DomainName
     Properties:
       #TODO: Parameterise.
-      CertificateArn: "arn:aws:acm:us-east-1:732786819153:certificate/bc66619f-dce3-4f61-bdca-818d44e78894"
+      CertificateArn: !Ref ProductionCertArn
       DomainName: "api.peterwills.com"
+
+  ApiGatewayBasePathMapping:
+    Type:
+      Properties:
+        BasePath: "prod"
+        DomainName: "api.peterwills.com"
+        RestApiId: !GetAtt ApiGatewayApi.RootResourceId
+        Stage: "prod"
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
