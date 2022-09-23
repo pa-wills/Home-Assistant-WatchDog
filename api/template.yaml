@@ -127,6 +127,8 @@ Resources:
   ApiGatewayDomainName:
     Type: 'AWS::ApiGateway::DomainName'
     Properties:
+      #TODO: Parameterise.
+      CertificateArn: "arn:aws:acm:us-east-1:623056247312:certificate/c1f1f20f-e25f-4b68-b51e-5032791022ff"
       DomainName: "api.peterwills.com"
 
   PermissionForEventsToInvokeLambda: 
