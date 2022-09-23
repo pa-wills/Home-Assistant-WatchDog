@@ -136,12 +136,12 @@ Resources:
       DomainName: "api.peterwills.com"
 
   ApiGatewayBasePathMapping:
-    Type:
-      Properties:
-        BasePath: "prod"
-        DomainName: "api.peterwills.com"
-        RestApiId: !GetAtt ApiGatewayApi.RootResourceId
-        Stage: "prod"
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      BasePath: "prod"
+      DomainName: "api.peterwills.com"
+      RestApiId: !GetAtt ApiGatewayApi.RootResourceId
+      Stage: "prod"
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
