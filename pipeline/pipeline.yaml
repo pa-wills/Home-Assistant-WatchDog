@@ -32,6 +32,14 @@ Parameters:
     Type: String
     Description: "The ARN of the existing connection back into Github."
     Default: "arn:aws:codestar-connections:ap-southeast-2:623056247312:connection/e23152ba-62a3-4321-93a5-314cf6858b87"  
+  ProductionCfnRoleArn:
+    Type: String
+    Description: "The Role that will be assumed by CloudFormation in order to deploy production resources."
+    Default: "arn:aws:iam::732786819153:role/cf-execution-role-prod"
+  ProductionCodePipelineRoleArn:
+    Type: String
+    Description: "The Role that will be assumed by the CodePipeline in order to execute the Production stage."
+    Default: "arn:aws:iam::732786819153:role/cross-account-role-prod"
 
 Resources:
 
@@ -41,8 +49,11 @@ Resources:
     Description: The pipeline. Kind of the core of things, really.
     Properties:
       ArtifactStore:
-        Type: S3
+        EncryptionKey:
+          Id: !GetAtt PipelineEncryptionKey.Arn
+          Type: KMS 
         Location: !Ref PipelineOutputBucket
+        Type: S3
       RoleArn: !GetAtt
         - CodePipelineServiceRole
         - Arn
@@ -79,7 +90,7 @@ Resources:
           OutputArtifacts:
           - Name: "BuildArtifact"
           RunOrder: 1
-        - Name: create-changeset
+        - Name: create-update-stack
           InputArtifacts:
           - Name: "BuildArtifact"
           ActionTypeId:
@@ -89,29 +100,15 @@ Resources:
             Provider: CloudFormation
           OutputArtifacts: []
           Configuration:
-            ActionMode: CHANGE_SET_REPLACE
-            Capabilities: CAPABILITY_NAMED_IAM
+            ActionMode: CREATE_UPDATE
+            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
             ChangeSetName: pipeline-changeset-prod
-            RoleArn: !GetAtt 
-              - CloudFormationTrustRole
-              - Arn
+            RoleArn: !Ref ProductionCfnRoleArn
             StackName: HomeAssistantWatchDog-Prod
-            TemplatePath: !Sub "${AppName}-BuildArtifact::api/packaged-template.yaml"
+            TemplatePath: "BuildArtifact::api/packaged-template.yaml"
 #            TemplateConfiguration: !If [ HasStagingVariables, !Sub "${AppName}-BuildArtifact::${StagingFile}", "" ]
+          RoleArn: !Ref ProductionCodePipelineRoleArn
           RunOrder: 2 # Need one of these on each action. Otherwise - confusing errors relating to input / output artifacts.
-        - Name: execute-changeset
-          InputArtifacts: []
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: "1"
-            Provider: CloudFormation
-          Configuration:
-            StackName: HomeAssistantWatchDog-Prod
-            ActionMode: CHANGE_SET_EXECUTE
-            ChangeSetName: pipeline-changeset-prod
-          OutputArtifacts: []
-          RunOrder: 3 
         - Name: pvt
           InputArtifacts:
           - Name: "SourceArtifact"
@@ -123,7 +120,7 @@ Resources:
           OutputArtifacts: []
           Configuration:
             ProjectName: !Ref CodeBuildProject2
-          RunOrder: 4
+          RunOrder: 3
 
   # Build sub-stage (first of two CodeBuild Objects).
   CodeBuildProject:
@@ -267,7 +264,6 @@ Resources:
     Description: Creating service role in IAM for AWS CodeBuild
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AppName}-codebuild-role"
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -301,7 +297,6 @@ Resources:
     Description: Creating service role in IAM for AWS CloudFormation
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AppName}-cloudformation-role"
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
@@ -331,7 +326,6 @@ Resources:
   CodePipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: !Sub "${AppName}-CodePipeline-Service-Role"
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -342,7 +336,7 @@ Resources:
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy"
+        - PolicyName: !Sub "${AppName}-CodePipelineRolePolicy2"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -364,6 +358,11 @@ Resources:
                 Action:
                   - 'iam:PassRole'
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'sts:AssumeRole'
+                Resource: 
+                  - !Ref ProductionCodePipelineRoleArn
               - Effect: Allow
                 Action:
                   - 'elasticbeanstalk:*'
