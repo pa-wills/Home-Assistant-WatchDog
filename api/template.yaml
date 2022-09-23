@@ -111,7 +111,7 @@ Resources:
           TABLE_NAME: 
             Ref: HomeAssistantHeartBeatDyDB
           TOPIC_NAME:
-            Ref: HeartbeatNotificationTopic
+            GetAtt: HeartbeatNotificationTopic.TopicName
           NOTIFICATION_MESSAGE: 
             Ref: NotificationMessageStringParameter # Text of notification message.
           NOTIFICATION_WAIT_MINS: 
