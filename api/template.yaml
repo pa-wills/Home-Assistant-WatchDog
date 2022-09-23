@@ -68,8 +68,8 @@ Resources:
 
   # Lambdas
   onHeartbeatFromHomeAssistant:
-    Type: AWS::Serverless::Function
     DependsOn: HeartbeatLambdaRole
+    Type: AWS::Serverless::Function
     Properties:
       Handler: onHeartbeatFromHomeAssistant.lambda_handler
       CodeUri: . 
@@ -85,11 +85,13 @@ Resources:
           ENV_NAME: 
             Ref: EnvironmentType
       Events:
-        GetResource:
+        ApiEvent:
           Type: Api
           Properties:
             Path: /heartbeat
             Method: get
+            RestApiId:
+              Ref: ApiGatewayApi
 
   onCheckHeartbeatRecency:
     Type: AWS::Serverless::Function
@@ -113,6 +115,13 @@ Resources:
           NOTIFICATION_WAIT_MINS: 
             Ref: NotificationFlatlinePeriodBeforeParameter # Number of mins to wait before.
 
+  # API Gateway
+  ApiGatewayApi:
+    DependsOn: onHeartbeatFromHomeAssistant
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
     Properties: 
@@ -130,7 +139,6 @@ Resources:
     Type:  AWS::IAM::Role
 #    DependsOn: HomeAssistantHeartBeatDyDB
     Properties:
-      RoleName: !Sub "${AppName}-${EnvironmentType}-HeartbeatLambdaRole"
       Description: Allows Lambda functions to call AWS services on your behalf.
       Path: /
       # Unsure what this does?
@@ -180,4 +188,12 @@ Resources:
             Ref: NotificationEmailEndpoint
           Protocol: "email"
       TopicName: !Sub "${AppName}-${EnvironmentType}-HeartbeatNotificationTopic"
+
+Outputs:
+  ApiUrl:
+    Description: "URL of the API's HTTP endpoint"
+    Value:
+      
+
+
 
