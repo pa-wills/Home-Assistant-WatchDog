@@ -193,9 +193,10 @@ Outputs:
   ApiUrl:
     Description: "URL of the API's HTTP endpoint"
     Value: !Join
-      - "https://"
-      - !GetAtt ApiGatewayApi.RootResourceId
-      - "execute-api.ap-southeast-2.amazonaws.com/Prod/heartbeat"
+      - ""
+      - - "https://"
+        - !GetAtt ApiGatewayApi.RootResourceId
+        - "execute-api.ap-southeast-2.amazonaws.com/Prod/heartbeat"
 
 
 
