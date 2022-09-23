@@ -125,9 +125,9 @@ Resources:
       StageName: prod
 
   ApiGatewayDomainName:
-  Type: 'AWS::ApiGateway::DomainName'
-  Properties:
-    DomainName: "api.peterwills.com"
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      DomainName: "api.peterwills.com"
 
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
