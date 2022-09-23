@@ -106,8 +106,12 @@ Resources:
         Variables:
           APP_NAME:
             Ref: AppName
-          ENV_NAME: 
+          ENV_NAME:
             Ref: EnvironmentType
+          TABLE_NAME: 
+            Ref: HomeAssistantHeartBeatDyDB
+          TOPIC_NAME:
+            Ref: HeartbeatNotificationTopic
           NOTIFICATION_MESSAGE: 
             Ref: NotificationMessageStringParameter # Text of notification message.
           NOTIFICATION_WAIT_MINS: 

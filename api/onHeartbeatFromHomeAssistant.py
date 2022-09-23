@@ -8,10 +8,7 @@ import os
 import time
 
 def lambda_handler(event, context):
-    # TODO: construct the new tablename from env vars.
-    # tableName = "HomeAssistantHeartBeat"
     tableName = str(os.environ.get('TABLE_NAME'))
-
     dynamodb = boto3.resource('dynamodb', region_name="ap-southeast-2")
     table = dynamodb.Table(tableName)
     dt_string = datetime.datetime.now().isoformat()
