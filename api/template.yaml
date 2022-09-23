@@ -140,7 +140,7 @@ Resources:
     Properties:
       BasePath: "prod"
       DomainName: "api.peterwills.com"
-      RestApiId: !GetAtt ApiGatewayApi.RootResourceId
+      RestApiId: ApiGatewayApi
       Stage: "prod"
 
   PermissionForEventsToInvokeLambda: 
