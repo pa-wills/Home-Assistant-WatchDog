@@ -124,9 +124,11 @@ Resources:
   # API Gateway
   ApiGatewayApi:
     DependsOn: onHeartbeatFromHomeAssistant
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: prod
+    Type: AWS::ApiGateway::RestApi
+
+  ApiGatewayApiStage:
+    Type: AWS::ApiGateway::Stage
+      RestApiId: !Ref ApiGatewayApi
 
   ApiGatewayDomainName:
     Type: AWS::ApiGateway::DomainName
